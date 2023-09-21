@@ -1,0 +1,38 @@
+{
+    "name": "@statsanytime/trade-bots",
+    "description": "Simple framework for building CS trade-bots!",
+    "version": "0.1.0",
+    "type": "module",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.mjs",
+            "require": "./dist/index.cjs"
+        }
+    },
+    "bin": {
+        "stattb": "./dist/cli.mjs"
+    },
+    "main": "./dist/index.cjs",
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "unbuild",
+        "stattb": "node dist/stattb.mjs",
+        "test": "vitest"
+    },
+    "author": "Pixel",
+    "license": "MIT",
+    "dependencies": {
+        "citty": "^0.1.4",
+        "csgoempire-wrapper": "^0.1.19"
+    },
+    "devDependencies": {
+        "@types/node": "^20.6.2",
+        "unbuild": "^2.0.0",
+        "vitest": "^0.34.5"
+    }
+}

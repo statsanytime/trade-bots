@@ -1,0 +1,7 @@
+{
+    "name": "statsanytime-trade-bots",
+    "private": true,
+    "workspaces": [
+        "packages/*"
+    ]
+}
