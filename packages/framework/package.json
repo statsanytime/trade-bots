@@ -28,6 +28,7 @@
     "license": "MIT",
     "dependencies": {
         "citty": "^0.1.4",
+        "consola": "^3.2.3",
         "csgoempire-wrapper": "^0.1.19"
     },
     "devDependencies": {

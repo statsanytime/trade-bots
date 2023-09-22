@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { CSGOEmpire } from 'csgoempire-wrapper';
-import { createPipeline, startBots } from '../src/index.ts';
+import { CSGOEmpireMarketplace, createPipeline, startBots } from '../src/index.ts';
 
 vi.mock('csgoempire-wrapper', () => {
     const tradingSocketOnMock = vi.fn();
@@ -70,11 +70,11 @@ describe('index test', () => {
             pipeline: createPipeline('test', function () {
                 this.listen('csgoempire:item-buyable', listenFn);
             }),
-            marketplaces: {
-                csgoempire: {
+            marketplaces: [
+                new CSGOEmpireMarketplace({
                     apiKey: 'testApiKey',
-                },
-            },
+                }),
+            ],
         };
 
         startBots([bot]);
@@ -97,11 +97,11 @@ describe('index test', () => {
                     this.withdraw();
                 });
             }),
-            marketplaces: {
-                csgoempire: {
+            marketplaces: [
+                new CSGOEmpireMarketplace({
                     apiKey: 'testApiKey',
-                },
-            },
+                }),
+            ],
         };
 
         startBots([bot]);

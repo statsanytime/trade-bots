@@ -1,5 +1,3 @@
-import { PipelineContextEvent } from "../types.js";
-
 export interface CSGOEmpireItem {
     auction_ends_at: null | number;
     auction_highest_bid: null | number;
@@ -35,12 +33,6 @@ export interface CSGOEmpireItem {
         sub_type: string;
         rarity: string;
     };
-}
-
-export interface CSGOEmpireItemEvent extends PipelineContextEvent {
-    item: {
-        id: number;
-    }
 }
 
 export type InitSocketEvent = {

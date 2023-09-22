@@ -1,18 +1,17 @@
 import { CSGOEmpire } from 'csgoempire-wrapper';
-import type { Bot } from '../types.js';
-import type { CSGOEmpireItem, CSGOEmpireItemEvent } from './csgoempire.types.js';
+import type { CSGOEmpireItem } from './csgoempire.types.js';
 import type { MarketplaceEvent } from './types.js';
-import { PipelineEventContext } from '../pipelines.js';
+import { PipelineItemContext } from '../pipelines.js';
+
+interface CSGOEmpireMarketplaceOptions {
+    apiKey: string;
+}
 
 export class CSGOEmpireMarketplace {
     account: CSGOEmpire;
 
-    constructor(bot: Bot) {
-        if (!bot.marketplaces.csgoempire) {
-            throw new Error('CSGOEmpire marketplace is not configured.');
-        }
-
-        this.account = new CSGOEmpire(bot.marketplaces.csgoempire.apiKey, {
+    constructor(options: CSGOEmpireMarketplaceOptions) {
+        this.account = new CSGOEmpire(options.apiKey, {
             connectToSocket: true,
         });
 
@@ -21,24 +20,22 @@ export class CSGOEmpireMarketplace {
         });
     }
 
-    listen(pipelineContext: PipelineEventContext, ListenableEvents: MarketplaceEvent, handler: Function) {
+    listen(pipelineContext: PipelineItemContext, ListenableEvents: MarketplaceEvent, handler: Function) {
         switch (ListenableEvents) {
             case 'item-buyable':
                 this.account.tradingSocket.on('new_item', (item: CSGOEmpireItem) => {
-                    pipelineContext.event.item = item;
+                    pipelineContext.item = item;
 
                     handler.call(pipelineContext, item);
                 });
         }
     }
 
-    withdraw(pipelineContext: PipelineEventContext) {
-        if (!pipelineContext.event.item) {
-            throw new Error('Event item is not defined.');
+    withdraw(pipelineContext: PipelineItemContext) {
+        if (!pipelineContext.item) {
+            throw new Error('Item is not defined.');
         }
 
-        const event = pipelineContext.event as CSGOEmpireItemEvent;
-
-        return this.account.makeWithdrawal(event.item.id);
+        return this.account.makeWithdrawal(pipelineContext.item.id);
     }
 };

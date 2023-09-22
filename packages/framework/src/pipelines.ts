@@ -1,29 +1,30 @@
+import type { CSGOEmpireItem } from './marketplaces/csgoempire.types.js';
 import { Marketplaces, parseEvent } from './marketplaces/index.js';
-import type { Marketplace, MarketplaceName } from './marketplaces/types.js';
-import type { Bot, ListenableEvents, Pipeline, PipelineContextEvent, ScheduleDepositOptions } from './types.js';
+import type { MarketplaceName } from './marketplaces/types.js';
+import type { Bot, ListenableEvents, Pipeline, ScheduleDepositOptions } from './types.js';
 
 export class PipelineContext {
     bot: Bot;
-    marketplaces: Record<string, Marketplace>;
 
     constructor(bot: Bot) {
         this.bot = bot;
-        this.marketplaces = {};
     }
 
-    resolveMarketplace(marketplace: MarketplaceName) {
-        if (!this.marketplaces[marketplace]) {
-            this.marketplaces[marketplace] = new Marketplaces[marketplace](this.bot);
+    resolveMarketplace(name: MarketplaceName) {
+        const marketplace = this.bot.marketplaces.find((marketplace) => marketplace instanceof Marketplaces[name]);
+
+        if (!marketplace) {
+            throw new Error(`Marketplace ${marketplace} is not defined.`);
         }
 
-        return this.marketplaces[marketplace];
+        return marketplace;
     }
 
     listen(event: ListenableEvents, handler: () => void) {
         const { marketplaceName, marketplaceEvent } = parseEvent(event);
         const marketplace = this.resolveMarketplace(marketplaceName);
 
-        const nestedContext = new PipelineEventContext(this, {
+        const nestedContext = new PipelineItemContext(this, {
             marketplace: marketplaceName,
         });
 
@@ -31,18 +32,19 @@ export class PipelineContext {
     }
 }
 
-export class PipelineEventContext extends PipelineContext {
-    event: PipelineContextEvent;
+export class PipelineItemContext extends PipelineContext {
+    marketplace: MarketplaceName;
+    item?: CSGOEmpireItem;
 
-    constructor(parent: PipelineContext, event: PipelineContextEvent) {
+    constructor(parent: PipelineContext, { marketplace, item }: { marketplace: MarketplaceName; item?: CSGOEmpireItem }) {
         super(parent.bot);
 
-        this.marketplaces = parent.marketplaces;
-        this.event = event;
+        this.marketplace = marketplace;
+        this.item = item;
     }
 
     async withdraw() {
-        const marketplace = this.resolveMarketplace(this.event.marketplace);
+        const marketplace = this.resolveMarketplace(this.marketplace);
 
         const nestedContext = new PipelineWithdrawContext(this);
 
@@ -50,9 +52,12 @@ export class PipelineEventContext extends PipelineContext {
     }
 }
 
-export class PipelineWithdrawContext extends PipelineEventContext {
-    constructor(parent: PipelineEventContext) {
-        super(parent, parent.event);
+export class PipelineWithdrawContext extends PipelineItemContext {
+    constructor(parent: PipelineItemContext) {
+        super(parent, {
+            marketplace: parent.marketplace,
+            item: parent.item,
+        });
     }
 
     async scheduleDeposit(marketplace: MarketplaceName, options: ScheduleDepositOptions) {

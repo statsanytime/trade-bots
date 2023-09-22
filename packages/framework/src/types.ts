@@ -1,15 +1,11 @@
-import { MarketplaceName } from "./marketplaces/types";
+import { Marketplace } from "./marketplaces/types";
 
 export type ListenableEvents = 'csgoempire:item-buyable';
 
 export interface Bot {
     name: string;
     pipeline: Pipeline;
-    marketplaces: {
-        csgoempire?: {
-            apiKey: string;
-        };
-    };
+    marketplaces: Marketplace[];
 }
 
 export interface Pipeline {
@@ -17,11 +13,12 @@ export interface Pipeline {
     handler: () => void;
 }
 
-export interface PipelineContextEvent {
-    [key: string]: any;
-    marketplace: MarketplaceName;
-}
-
 export interface ScheduleDepositOptions {
     amountUsd: number;
+}
+
+export interface PipelineItem {
+    name: string;
+    marketName: string;
+    marketId: string | number;
 }
