@@ -37,7 +37,7 @@ export class CSGOEmpireMarketplace {
                             pipelineContext,
                             marketId: event.id,
                             marketName: event.market_name,
-                            priceUsd: this.coinsToUsd(event.market_value),
+                            priceUsd: this.coinsToUsd(event.market_value / 100),
                         });
 
                         pipelineContext.item = item;

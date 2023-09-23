@@ -206,4 +206,33 @@ describe('index test', () => {
 
         expect(withdrawFn).toHaveBeenCalledWith(newItemEvent.id);
     });
+
+    test('csgoempire price usd works', async () => {
+        const listenMock = vi.fn();
+
+        const bot = {
+            name: 'test',
+            pipeline: createPipeline('test', function () {
+                this.listen('csgoempire:item-buyable', listenMock);
+            }),
+            marketplaces: [
+                new CSGOEmpireMarketplace({
+                    apiKey: 'testApiKey',
+                }),
+            ],
+        };
+
+        startBots([bot]);
+
+        const onFn = new CSGOEmpire().tradingSocket.on;
+        const onCallback = onFn.mock.calls[1][1];
+
+        onCallback(newItemEvent);
+
+        expect(listenMock).toHaveBeenCalledWith(
+            expect.objectContaining({
+                priceUsd: 65.187478500172,
+            }),
+        );
+    });
 });
