@@ -1,5 +1,5 @@
 import { Item } from './item.js';
-import { Marketplaces, parseEvent } from './marketplaces/index.js';
+import { parseEvent } from './marketplaces/index.js';
 import type { MarketplaceName } from './marketplaces/types.js';
 import type {
     Bot,
@@ -18,7 +18,7 @@ export class PipelineContext {
 
     resolveMarketplace(name: MarketplaceName) {
         const marketplace = this.bot.marketplaces.find(
-            (marketplace) => marketplace instanceof Marketplaces[name],
+            (marketplace) => marketplace.name === name,
         );
 
         if (!marketplace) {

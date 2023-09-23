@@ -1,6 +1,6 @@
 import { CSGOEmpire } from 'csgoempire-wrapper';
 import type { CSGOEmpireNewItemEvent } from './csgoempire.types.js';
-import type { MarketplaceEvent } from './types.js';
+import type { MarketplaceEvent, MarketplaceName } from './types.js';
 import { PipelineItemContext } from '../pipelines.js';
 import { Item } from '../item.js';
 
@@ -12,6 +12,8 @@ export class CSGOEmpireMarketplace {
     USD_TO_COINS_RATE = 1.62792;
 
     account: CSGOEmpire;
+
+    name: MarketplaceName = 'csgoempire';
 
     constructor(options: CSGOEmpireMarketplaceOptions) {
         this.account = new CSGOEmpire(options.apiKey, {

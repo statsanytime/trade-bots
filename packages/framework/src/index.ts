@@ -12,6 +12,11 @@ export async function startBots(bots: Bot[]) {
     }
 }
 
+// Just for simple typing
+export function createBot(options: Bot) {
+    return options;
+}
+
 export { createPipeline } from './pipelines.js';
 export { CSGOEmpireMarketplace } from './marketplaces/csgoempire.js';
 export { PricempirePriceSource } from './priceSources/pricempire.js';

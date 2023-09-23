@@ -1,7 +1,6 @@
 import { CSGOEmpireMarketplace } from './csgoempire.js';
-import { Marketplaces } from './index.js';
 
-export type MarketplaceName = keyof typeof Marketplaces;
+export type MarketplaceName = 'csgoempire';
 
 export type MarketplaceEvent = 'item-buyable';
 

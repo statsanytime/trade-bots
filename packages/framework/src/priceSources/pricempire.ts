@@ -2,12 +2,7 @@ import consola from 'consola';
 import get from 'lodash/get';
 import { createFetch } from 'ofetch';
 import type { PriceSourceName } from './types.js';
-
-interface PricempirePriceSourceOptions {
-    apiKey: string;
-    version: 'v2' | 'v3';
-    sources: string[];
-}
+import type { PricempirePriceSourceOptions } from './pricempire.types.js';
 
 export class PricempirePriceSource {
     apiKey: string;
