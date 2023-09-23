@@ -3,11 +3,14 @@ import { CSGOEmpireMarketplace } from './csgoempire.js';
 import { MarketplaceEvent, MarketplaceName, ParsedEvent } from './types.js';
 
 export const Marketplaces = {
-    'csgoempire': CSGOEmpireMarketplace,
+    csgoempire: CSGOEmpireMarketplace,
 };
 
 export function parseEvent(event: ListenableEvents): ParsedEvent {
-    const [marketplaceName, marketplaceEvent] = event.split(':') as [MarketplaceName, MarketplaceEvent];
+    const [marketplaceName, marketplaceEvent] = event.split(':') as [
+        MarketplaceName,
+        MarketplaceEvent,
+    ];
 
     if (!marketplaceName || !Marketplaces[marketplaceName]) {
         throw new Error(`Failed to find marketplace for event ${event}`);

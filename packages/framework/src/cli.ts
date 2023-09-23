@@ -14,7 +14,9 @@ async function getBots(): Promise<{
         return bots;
     } catch (error) {
         console.error(error);
-        throw new Error('Failed to retrieve bots from index.js. Make sure this file exists in the root directory of your project. If it does, please make an issue on the GitHub repository.');
+        throw new Error(
+            'Failed to retrieve bots from index.js. Make sure this file exists in the root directory of your project. If it does, please make an issue on the GitHub repository.',
+        );
     }
 }
 

@@ -1,7 +1,13 @@
-import type { CSGOEmpireItem } from './marketplaces/csgoempire.types.js';
+import { Item } from './item.js';
 import { Marketplaces, parseEvent } from './marketplaces/index.js';
 import type { MarketplaceName } from './marketplaces/types.js';
-import type { Bot, ListenableEvents, Pipeline, ScheduleDepositOptions } from './types.js';
+import type {
+    Bot,
+    ListenableEvents,
+    Pipeline,
+    PipelineEvent,
+    ScheduleDepositOptions,
+} from './types.js';
 
 export class PipelineContext {
     bot: Bot;
@@ -11,7 +17,9 @@ export class PipelineContext {
     }
 
     resolveMarketplace(name: MarketplaceName) {
-        const marketplace = this.bot.marketplaces.find((marketplace) => marketplace instanceof Marketplaces[name]);
+        const marketplace = this.bot.marketplaces.find(
+            (marketplace) => marketplace instanceof Marketplaces[name],
+        );
 
         if (!marketplace) {
             throw new Error(`Marketplace ${marketplace} is not defined.`);
@@ -34,13 +42,22 @@ export class PipelineContext {
 
 export class PipelineItemContext extends PipelineContext {
     marketplace: MarketplaceName;
-    item?: CSGOEmpireItem;
+    item?: Item;
+    event?: PipelineEvent;
 
-    constructor(parent: PipelineContext, { marketplace, item }: { marketplace: MarketplaceName; item?: CSGOEmpireItem }) {
+    constructor(
+        parent: PipelineContext,
+        {
+            marketplace,
+            item,
+            event,
+        }: { marketplace: MarketplaceName; item?: Item; event?: PipelineEvent },
+    ) {
         super(parent.bot);
 
         this.marketplace = marketplace;
         this.item = item;
+        this.event = event;
     }
 
     async withdraw() {
@@ -57,11 +74,17 @@ export class PipelineWithdrawContext extends PipelineItemContext {
         super(parent, {
             marketplace: parent.marketplace,
             item: parent.item,
+            event: parent.event,
         });
     }
 
-    async scheduleDeposit(marketplace: MarketplaceName, options: ScheduleDepositOptions) {
-        console.log(`Scheduled deposit of ${options.amountUsd} USD to ${marketplace}`);
+    async scheduleDeposit(
+        marketplace: MarketplaceName,
+        options: ScheduleDepositOptions,
+    ) {
+        console.log(
+            `Scheduled deposit of ${options.amountUsd} USD to ${marketplace}`,
+        );
     }
 }
 

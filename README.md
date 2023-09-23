@@ -25,7 +25,7 @@ import { createPipeline } from '@statsanytime/trade-bots';
 
 export const RedepositorPipeline = createPipeline('Redepositor', function () {
     this.listen('csgoempire:item-buyable', async (item) => {
-        if (item.priceUsd <= item.priceSources.buff163.buyOrdersUsd) {
+        if (item.priceUsd <= item.getPrice('pricempire', 'buff_buy')) {
             await this.withdraw();
 
             await this.scheduleDeposit('csgofloat', {
