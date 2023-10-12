@@ -35,6 +35,107 @@ export interface CSGOEmpireNewItemEvent {
     };
 }
 
+export enum CSGOEmpireTradeStatus {
+    Error = -1,
+    Processing = 2,
+    Sending = 3,
+    Confirming = 4,
+    Sent = 5,
+    Completed = 6,
+    Canceled = 8,
+    TimedOut = 9,
+}
+
+type CSGOEmpireItem = {
+    market_name: string;
+    market_value: number;
+};
+
+type CSGOEmpireWithdrawalStatus = {
+    type: 'withdrawal';
+    data: {
+        id: number;
+        total_value: number;
+        item_id: number;
+        item: CSGOEmpireItem;
+        status: CSGOEmpireTradeStatus.Confirming;
+        status_message: 'Confirming';
+        tradeoffer_id: number;
+    };
+};
+
+type CSGOEmpireSendingStatus = {
+    type: 'withdrawal';
+    data: {
+        status: CSGOEmpireTradeStatus.Sending;
+        status_message: 'Sending';
+        metadata: {
+            item_validation: {
+                numWrongItemDetections?: number;
+                validItemDetected?: boolean;
+            };
+            expires_at: number;
+        };
+        id: number;
+        item_id: number;
+        tradeoffer_id: number;
+        item: CSGOEmpireItem;
+        total_value: number;
+    };
+};
+
+type CSGOEmpireSentStatus = {
+    type: 'withdrawal';
+    data: {
+        status: CSGOEmpireTradeStatus.Sent;
+        status_message: 'Sent';
+        metadata: {
+            item_validation: {
+                validItemDetected: true;
+            };
+            expires_at: number;
+        };
+        id: number;
+        item_id: number;
+        tradeoffer_id: number;
+        item: CSGOEmpireItem;
+        total_value: number;
+    };
+};
+
+type CSGOEmpireCompletedStatus = {
+    type: 'withdrawal';
+    data: {
+        status: CSGOEmpireTradeStatus.Completed;
+        status_message: 'Completed';
+        id: number;
+        item_id: number;
+        tradeoffer_id: number;
+        item: CSGOEmpireItem;
+        total_value: number;
+    };
+};
+
+type CSGOEmpireErroredStatus = {
+    type: 'withdrawal';
+    data: {
+        status: CSGOEmpireTradeStatus.Error;
+        status_message: 'Error';
+        id: number;
+        item_id: number;
+        tradeoffer_id: number;
+        item: CSGOEmpireItem;
+        total_value: number;
+    };
+};
+
+export type CSGOEmpireTradeStatusEvent =
+    | CSGOEmpireWithdrawalStatus
+    | CSGOEmpireSendingStatus
+    | CSGOEmpireSentStatus
+    | CSGOEmpireCompletedStatus
+    | CSGOEmpireErroredStatus;
+
 export type InitSocketEvent =
     | {
           authenticated: false;
@@ -95,3 +196,7 @@ export type InitSocketEvent =
           name: string;
           balance: number;
       };
+
+export interface CSGOEmpirePluginOptions {
+    apiKey: string;
+}

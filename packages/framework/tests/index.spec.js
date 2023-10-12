@@ -10,14 +10,10 @@ import {
 import { CSGOEmpire } from 'csgoempire-wrapper';
 import { setupServer } from 'msw/node';
 import { rest } from 'msw';
-import {
-    CSGOEmpireMarketplace,
-    PricempirePriceSource,
-    createPipeline,
-    startBots,
-} from '../src/index.ts';
-
-const flushPromises = () => new Promise((resolve) => setImmediate(resolve));
+import { createCSGOEmpirePlugin } from '@statsanytime/trade-bots-csgoempire';
+import { createPricempirePlugin } from '@statsanytime/trade-bots-pricempire';
+import { createPipeline, startBots, createBot } from '../src/index.ts';
+import { flushPromises } from './utils.js';
 
 vi.mock('csgoempire-wrapper', () => {
     const tradingSocketOnMock = vi.fn();
@@ -77,6 +73,22 @@ const newItemEvent = {
     },
 };
 
+const tradeStatusCompletedEvent = {
+    type: 'withdrawal',
+    data: {
+        status: 6,
+        status_message: 'Completed',
+        id: 1,
+        item_id: 1,
+        tradeoffer_id: 1,
+        item: {
+            market_name: 'USP-S | Kill Confirmed (Minimal Wear)',
+            market_value: 106.12,
+        },
+        total_value: 10612,
+    },
+};
+
 describe('index test', () => {
     beforeAll(() => mswServer.listen());
 
@@ -90,17 +102,17 @@ describe('index test', () => {
     test('listening for events works', async () => {
         const listenFn = vi.fn();
 
-        const bot = {
+        const bot = createBot({
             name: 'test',
             pipeline: createPipeline('test', function () {
                 this.listen('csgoempire:item-buyable', listenFn);
             }),
-            marketplaces: [
-                new CSGOEmpireMarketplace({
+            plugins: [
+                createCSGOEmpirePlugin({
                     apiKey: 'testApiKey',
                 }),
             ],
-        };
+        });
 
         startBots([bot]);
 
@@ -121,19 +133,19 @@ describe('index test', () => {
     });
 
     test('withdraw works', async () => {
-        const bot = {
+        const bot = createBot({
             name: 'test',
             pipeline: createPipeline('test', function () {
                 this.listen('csgoempire:item-buyable', function () {
                     this.withdraw();
                 });
             }),
-            marketplaces: [
-                new CSGOEmpireMarketplace({
+            plugins: [
+                createCSGOEmpirePlugin({
                     apiKey: 'testApiKey',
                 }),
             ],
-        };
+        });
 
         startBots([bot]);
 
@@ -146,6 +158,49 @@ describe('index test', () => {
         onCallback(newItemEvent);
 
         expect(withdrawFn).toHaveBeenCalledWith(newItemEvent.id);
+    });
+
+    test('after withdraw works', async () => {
+        const afterWithdrawFn = vi.fn();
+
+        const bot = createBot({
+            name: 'test',
+            pipeline: createPipeline('test', function () {
+                this.listen('csgoempire:item-buyable', async function () {
+                    await this.withdraw();
+
+                    afterWithdrawFn();
+                });
+            }),
+            plugins: [
+                createCSGOEmpirePlugin({
+                    apiKey: 'testApiKey',
+                }),
+            ],
+        });
+
+        startBots([bot]);
+
+        const onFn = new CSGOEmpire().tradingSocket.on;
+        const withdrawFn = new CSGOEmpire().makeWithdrawal;
+
+        expect(onFn).toHaveBeenCalledWith('new_item', expect.any(Function));
+        const newItemCb = onFn.mock.calls[1][1];
+
+        newItemCb(newItemEvent);
+
+        expect(withdrawFn).toHaveBeenCalledWith(newItemEvent.id);
+
+        expect(onFn).toHaveBeenCalledWith('trade_status', expect.any(Function));
+        const tradeStatusCb = onFn.mock.calls[2][1];
+
+        expect(afterWithdrawFn).not.toHaveBeenCalled();
+
+        tradeStatusCb(tradeStatusCompletedEvent);
+
+        await flushPromises();
+
+        expect(afterWithdrawFn).toHaveBeenCalled();
     });
 
     test('price sources work', async () => {
@@ -170,7 +225,7 @@ describe('index test', () => {
             ),
         );
 
-        const bot = {
+        const bot = createBot({
             name: 'test',
             pipeline: createPipeline('test', function () {
                 this.listen('csgoempire:item-buyable', function (item) {
@@ -179,18 +234,16 @@ describe('index test', () => {
                     }
                 });
             }),
-            marketplaces: [
-                new CSGOEmpireMarketplace({
+            plugins: [
+                createCSGOEmpirePlugin({
                     apiKey: 'testApiKey',
                 }),
-            ],
-            priceSources: [
-                new PricempirePriceSource({
+                createPricempirePlugin({
                     apiKey: 'testApiKey',
                     sources: ['buy_order'],
                 }),
             ],
-        };
+        });
 
         startBots([bot]);
 
@@ -210,17 +263,17 @@ describe('index test', () => {
     test('csgoempire price usd works', async () => {
         const listenMock = vi.fn();
 
-        const bot = {
+        const bot = createBot({
             name: 'test',
             pipeline: createPipeline('test', function () {
                 this.listen('csgoempire:item-buyable', listenMock);
             }),
-            marketplaces: [
-                new CSGOEmpireMarketplace({
+            plugins: [
+                createCSGOEmpirePlugin({
                     apiKey: 'testApiKey',
                 }),
             ],
-        };
+        });
 
         startBots([bot]);
 

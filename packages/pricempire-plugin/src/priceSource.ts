@@ -1,18 +1,18 @@
 import consola from 'consola';
 import get from 'lodash/get';
 import { createFetch } from 'ofetch';
-import type { PriceSourceName } from './types.js';
-import type { PricempirePriceSourceOptions } from './pricempire.types.js';
+import type { PricempirePluginOptions } from './types.js';
 
 export class PricempirePriceSource {
     apiKey: string;
     version: 'v2' | 'v3';
     prices: Record<string, unknown> = {};
-    name: PriceSourceName = 'pricempire';
     sources: string[];
     ofetch: ReturnType<typeof createFetch>;
 
-    constructor(options: PricempirePriceSourceOptions) {
+    static name: string = 'pricempire';
+
+    constructor(options: PricempirePluginOptions) {
         this.apiKey = options.apiKey;
         this.version = options.version || 'v3';
         this.sources = options.sources;

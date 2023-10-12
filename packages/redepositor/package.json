@@ -1,12 +1,13 @@
 {
-  "name": "redepositor",
-  "type": "module",
-  "main": "index.js",
-  "scripts": {
-    "start": "stattb"
-  },
-  "dependencies": {
-    "@statsanytime/trade-bots": "^0.1.0",
-    "dotenv": "^16.3.1"
-  }
+    "name": "redepositor",
+    "type": "module",
+    "main": "index.js",
+    "scripts": {
+        "start": "stattb"
+    },
+    "dependencies": {
+        "@statsanytime/trade-bots": "^0.1.0",
+        "@statsanytime/trade-bots-csgoempire": "^0.1.0",
+        "dotenv": "^16.3.1"
+    }
 }

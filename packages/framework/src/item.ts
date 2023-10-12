@@ -1,6 +1,4 @@
-import get from 'lodash/get';
 import { PipelineItemContext } from './pipelines.js';
-import type { PriceSourceName } from './priceSources/types.js';
 
 interface ItemOptions {
     pipelineContext: PipelineItemContext;
@@ -22,10 +20,8 @@ export class Item {
         this.priceUsd = options.priceUsd;
     }
 
-    getPrice(sourceName: PriceSourceName, attributes: string) {
-        const source = this.pipelineContext.bot.priceSources.find(
-            (source) => source.name === sourceName,
-        );
+    getPrice(sourceName: string, attributes: string) {
+        const source = this.pipelineContext.bot.priceSources[sourceName];
 
         if (!source) {
             throw new Error(`Price source ${sourceName} not found`);

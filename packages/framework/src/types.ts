@@ -1,14 +1,11 @@
-import { CSGOEmpireNewItemEvent } from './marketplaces/csgoempire.types.js';
-import { Marketplace } from './marketplaces/types.js';
-import { PriceSource } from './priceSources/types.js';
+import { Bot } from './index.js';
 
-export type ListenableEvents = 'csgoempire:item-buyable';
-
-export interface Bot {
-    name: string;
+export interface BotOptions {
+    name: string | undefined;
     pipeline: Pipeline;
-    marketplaces: Marketplace[];
-    priceSources: PriceSource[];
+    marketplaces: Record<string, any>;
+    priceSources: Record<string, any>;
+    plugins: Plugin[];
 }
 
 export interface Pipeline {
@@ -26,4 +23,11 @@ export interface PipelineItem {
     marketId: string | number;
 }
 
-export type PipelineEvent = CSGOEmpireNewItemEvent;
+export interface Plugin {
+    boot: (bot: Bot) => void;
+}
+
+export interface ParsedEvent {
+    marketplaceName: string;
+    marketplaceEvent: string;
+}

@@ -12,11 +12,12 @@ Trade bots should be simple. It should be possible to write code like this.
 
 ```javascript
 // index.js
+import { createBot } from '@statsanytime/trade-bots';
 import RedepositorPipeline from './pipelines/redepositor.js';
 
-export const bot1 = {
+export const bot1 = createBot({
     pipeline: RedepositorPipeline,
-};
+});
 ```
 
 ```javascript

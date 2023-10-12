@@ -1,13 +1,23 @@
+import { Bot } from './index.js';
 import { Item } from './item.js';
-import { parseEvent } from './marketplaces/index.js';
-import type { MarketplaceName } from './marketplaces/types.js';
-import type {
-    Bot,
-    ListenableEvents,
-    Pipeline,
-    PipelineEvent,
-    ScheduleDepositOptions,
-} from './types.js';
+import type { ParsedEvent, Pipeline, ScheduleDepositOptions } from './types.js';
+
+export function parseEvent(event: string): ParsedEvent {
+    const [marketplaceName, marketplaceEvent] = event.split(':');
+
+    if (!marketplaceName) {
+        throw new Error(`Failed to find marketplace for event ${event}`);
+    }
+
+    if (!marketplaceEvent) {
+        throw new Error(`Failed to parse marketplace event for event ${event}`);
+    }
+
+    return {
+        marketplaceName,
+        marketplaceEvent,
+    };
+}
 
 export class PipelineContext {
     bot: Bot;
@@ -16,10 +26,8 @@ export class PipelineContext {
         this.bot = bot;
     }
 
-    resolveMarketplace(name: MarketplaceName) {
-        const marketplace = this.bot.marketplaces.find(
-            (marketplace) => marketplace.name === name,
-        );
+    resolveMarketplace(name: string) {
+        const marketplace = this.bot.marketplaces[name];
 
         if (!marketplace) {
             throw new Error(`Marketplace ${marketplace} is not defined.`);
@@ -28,7 +36,13 @@ export class PipelineContext {
         return marketplace;
     }
 
-    listen(event: ListenableEvents, handler: () => void) {
+    listen(
+        event: string,
+        handler: (
+            this: PipelineItemContext | PipelineWithdrawContext,
+            event: any,
+        ) => void,
+    ) {
         const { marketplaceName, marketplaceEvent } = parseEvent(event);
         const marketplace = this.resolveMarketplace(marketplaceName);
 
@@ -41,9 +55,9 @@ export class PipelineContext {
 }
 
 export class PipelineItemContext extends PipelineContext {
-    marketplace: MarketplaceName;
+    marketplace: string;
     item?: Item;
-    event?: PipelineEvent;
+    event?: any;
 
     constructor(
         parent: PipelineContext,
@@ -51,7 +65,7 @@ export class PipelineItemContext extends PipelineContext {
             marketplace,
             item,
             event,
-        }: { marketplace: MarketplaceName; item?: Item; event?: PipelineEvent },
+        }: { marketplace: string; item?: Item; event?: any },
     ) {
         super(parent.bot);
 
@@ -60,12 +74,12 @@ export class PipelineItemContext extends PipelineContext {
         this.event = event;
     }
 
-    async withdraw() {
+    withdraw(): Promise<void> {
         const marketplace = this.resolveMarketplace(this.marketplace);
 
         const nestedContext = new PipelineWithdrawContext(this);
 
-        await marketplace.withdraw(nestedContext);
+        return marketplace.withdraw(nestedContext);
     }
 }
 
@@ -79,7 +93,7 @@ export class PipelineWithdrawContext extends PipelineItemContext {
     }
 
     async scheduleDeposit(
-        marketplace: MarketplaceName,
+        marketplace: string,
         options: ScheduleDepositOptions,
     ) {
         console.log(
@@ -88,7 +102,10 @@ export class PipelineWithdrawContext extends PipelineItemContext {
     }
 }
 
-export function createPipeline(name: string, handler: () => void): Pipeline {
+export function createPipeline(
+    name: string,
+    handler: (this: PipelineContext) => void,
+): Pipeline {
     return {
         name,
         handler,

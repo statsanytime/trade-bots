@@ -1,6 +1,5 @@
 {
-    "name": "@statsanytime/trade-bots",
-    "description": "Simple framework for building CS trade-bots!",
+    "name": "@statsanytime/trade-bots-csgoempire",
     "version": "0.1.0",
     "type": "module",
     "exports": {
@@ -10,9 +9,6 @@
             "require": "./dist/index.cjs"
         }
     },
-    "bin": {
-        "stattb": "./dist/cli.mjs"
-    },
     "main": "./dist/index.cjs",
     "module": "./dist/index.mjs",
     "types": "./dist/index.d.ts",
@@ -21,24 +17,16 @@
     ],
     "scripts": {
         "build": "unbuild",
-        "stattb": "node dist/stattb.mjs",
-        "test": "vitest",
         "prettier": "prettier --write ."
     },
     "author": "Pixel",
     "license": "MIT",
     "dependencies": {
-        "citty": "^0.1.4",
-        "consola": "^3.2.3",
-        "hookable": "^5.5.3"
+        "@statsanytime/trade-bots": "^0.1.0",
+        "csgoempire-wrapper": "^0.1.19"
     },
     "devDependencies": {
-        "@statsanytime/trade-bots-csgoempire": "^0.1.0",
-        "@statsanytime/trade-bots-pricempire": "^0.1.0",
-        "@statsanytime/trade-bots-steam": "^0.1.0",
         "@types/node": "^20.6.2",
-        "csgoempire-wrapper": "^0.1.19",
-        "msw": "^1.3.1",
         "prettier": "3.0.3",
         "unbuild": "^2.0.0",
         "vitest": "^0.34.5"

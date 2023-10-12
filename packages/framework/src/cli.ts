@@ -1,11 +1,10 @@
 #!/usr/bin/env node
 import { defineCommand, runMain } from 'citty';
 import { cwd } from 'node:process';
-import { startBots } from './index.js';
-import type { Bot } from './types.js';
+import { startBots, Bot } from './index.js';
 
 async function getBots(): Promise<{
-    [name: string]: Omit<Bot, 'name'>;
+    [name: string]: Bot;
 }> {
     try {
         const path = `file:///${cwd()}/index.js`;
@@ -25,10 +24,11 @@ const main = defineCommand({
         const bots = await getBots();
 
         await startBots(
-            Object.entries(bots).map(([name, botOptions]) => ({
-                name,
-                ...botOptions,
-            })),
+            Object.entries(bots).map(([name, bot]) => {
+                bot.name = name;
+
+                return bot;
+            }),
         );
     },
 });
