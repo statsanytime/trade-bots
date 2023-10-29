@@ -1,4 +1,4 @@
-import { Plugin } from '@statsanytime/trade-bots';
+import { Bot, Plugin } from '@statsanytime/trade-bots';
 // @ts-ignore
 import SteamUser from 'steam-user';
 // @ts-ignore
@@ -15,17 +15,20 @@ import {
 import util from 'util';
 import { SteamPluginOptions } from './types.js';
 
-class SteamPlugin implements Plugin {
+export class SteamPlugin implements Plugin {
+    name = 'steam';
     options: SteamPluginOptions;
-    user: SteamUser;
-    community: SteamCommunity;
-    manager: TradeOfferManager;
+    bot: Bot | undefined;
+    user: SteamUser | undefined;
+    community: SteamCommunity | undefined;
+    manager: TradeOfferManager | undefined;
 
     constructor(options: SteamPluginOptions) {
         this.options = options;
     }
 
-    boot() {
+    boot(bot: Bot) {
+        this.bot = bot;
         this.user = new SteamUser();
         this.community = new SteamCommunity();
 
@@ -123,6 +126,10 @@ class SteamPlugin implements Plugin {
         });
 
         this.manager.on('newOffer', async (offer: any) => {
+            if (!this.bot) {
+                throw new Error('Bot is not defined');
+            }
+
             if (offer.itemsToGive.length > 0) {
                 return;
             }
@@ -131,6 +138,8 @@ class SteamPlugin implements Plugin {
 
             try {
                 await acceptOfferFn();
+
+                this.bot.hooks.callHook('steam:offer-accepted', offer);
             } catch (err) {
                 console.error(err);
             }

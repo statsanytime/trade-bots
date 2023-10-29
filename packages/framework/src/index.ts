@@ -16,17 +16,23 @@ export async function startBots(bots: Bot[]) {
 export class Bot {
     name: string | undefined;
     pipeline: Pipeline;
-    plugins: Plugin[];
-    marketplaces: Record<string, any>;
+    plugins: Record<string, Plugin>;
     priceSources: Record<string, any>;
     hooks: Hookable;
 
     constructor(options: BotOptions) {
         this.name = options.name;
         this.pipeline = options.pipeline;
-        this.plugins = options.plugins;
 
-        this.marketplaces = {};
+        this.plugins = options.plugins.reduce(
+            (acc, plugin) => {
+                acc[plugin.name] = plugin;
+
+                return acc;
+            },
+            {} as Record<string, Plugin>,
+        );
+
         this.priceSources = {};
 
         this.hooks = createHooks();
@@ -35,11 +41,13 @@ export class Bot {
     }
 
     bootPlugins() {
-        this.plugins.forEach((plugin) => plugin.boot(this));
+        Object.values(this.plugins).forEach((plugin) => {
+            plugin.boot(this);
+        });
     }
 
-    registerMarketplace(key: string, marketplace: any) {
-        this.marketplaces[key] = marketplace;
+    hasPlugin(plugin: string) {
+        return !!this.plugins[plugin];
     }
 
     registerPriceSource(key: string, priceSource: any) {

@@ -1,67 +1,22 @@
-import { describe, expect, test, vi } from 'vitest';
-import TradeOfferMock from 'steam-tradeoffer-manager';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { createSteamPlugin } from '@statsanytime/trade-bots-steam';
 import { createPipeline, startBots, createBot } from '../src/index.ts';
-import { flushPromises } from './utils.js';
-
-vi.mock('steam-session', async () => {
-    class LoginSessionMock {
-        startWithCredentials() {
-            return Promise.resolve({
-                actionRequired: false,
-            });
-        }
-
-        on(event, cb) {
-            if (event === 'authenticated') {
-                cb();
-            }
-        }
-
-        getWebCookies() {
-            return Promise.resolve([]);
-        }
-    }
-
-    const actual = await vi.importActual('steam-session');
-
-    return {
-        LoginSession: LoginSessionMock,
-        EAuthTokenPlatformType: actual.EAuthTokenPlatformType,
-    };
-});
-
-vi.mock('steam-user', () => {
-    class SteamUserMock {
-        logOn = vi.fn();
-
-        on(event, cb) {
-            if (event === 'loggedOn') {
-                cb();
-            }
-        }
-    }
-
-    return {
-        default: SteamUserMock,
-    };
-});
-
-vi.mock('steam-tradeoffer-manager', () => {
-    const onMock = vi.fn();
-
-    class TradeOfferManagerMock {
-        on = onMock;
-
-        setCookies = vi.fn();
-    }
-
-    return {
-        default: TradeOfferManagerMock,
-    };
-});
+import {
+    flushPromises,
+    mockSteamSession,
+    mockSteamTradeOfferManager,
+    mockSteamUser,
+} from './utils.js';
 
 describe('steam test', () => {
+    let TradeOfferMock;
+
+    beforeEach(() => {
+        TradeOfferMock = mockSteamTradeOfferManager();
+        mockSteamUser();
+        mockSteamSession();
+    });
+
     test('steam plugin works', async () => {
         const bot = createBot({
             name: 'test',
@@ -80,16 +35,16 @@ describe('steam test', () => {
 
         await flushPromises();
 
-        const onManager = new TradeOfferMock().on;
-
-        expect(onManager).toHaveBeenCalledTimes(1);
-        expect(onManager).toHaveBeenCalledWith(
+        expect(TradeOfferMock.on).toHaveBeenCalledTimes(1);
+        expect(TradeOfferMock.on).toHaveBeenCalledWith(
             'newOffer',
             expect.any(Function),
         );
 
-        const onCallback = onManager.mock.calls[0][1];
-        const acceptMock = vi.fn();
+        const onCallback = TradeOfferMock.on.mock.calls[0][1];
+        const acceptMock = vi.fn((cb) => {
+            cb(null, 'completed');
+        });
 
         onCallback({
             id: 'test',
@@ -100,7 +55,9 @@ describe('steam test', () => {
 
         expect(acceptMock).toHaveBeenCalled();
 
-        const newAcceptMock = vi.fn();
+        const newAcceptMock = vi.fn((cb) => {
+            cb(null, 'completed');
+        });
 
         onCallback({
             id: 'test',

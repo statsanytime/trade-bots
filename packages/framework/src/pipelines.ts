@@ -1,23 +1,7 @@
 import { Bot } from './index.js';
 import { Item } from './item.js';
-import type { ParsedEvent, Pipeline, ScheduleDepositOptions } from './types.js';
-
-export function parseEvent(event: string): ParsedEvent {
-    const [marketplaceName, marketplaceEvent] = event.split(':');
-
-    if (!marketplaceName) {
-        throw new Error(`Failed to find marketplace for event ${event}`);
-    }
-
-    if (!marketplaceEvent) {
-        throw new Error(`Failed to parse marketplace event for event ${event}`);
-    }
-
-    return {
-        marketplaceName,
-        marketplaceEvent,
-    };
-}
+import type { Pipeline, ScheduleDepositOptions } from './types.js';
+import { appendStorageItem } from './storage.js';
 
 export class PipelineContext {
     bot: Bot;
@@ -26,80 +10,48 @@ export class PipelineContext {
         this.bot = bot;
     }
 
-    resolveMarketplace(name: string) {
-        const marketplace = this.bot.marketplaces[name];
-
-        if (!marketplace) {
-            throw new Error(`Marketplace ${marketplace} is not defined.`);
-        }
-
-        return marketplace;
-    }
-
     listen(
         event: string,
-        handler: (
-            this: PipelineItemContext | PipelineWithdrawContext,
-            event: any,
-        ) => void,
+        handler: (this: PipelineItemContext, event: any) => void,
     ) {
-        const { marketplaceName, marketplaceEvent } = parseEvent(event);
-        const marketplace = this.resolveMarketplace(marketplaceName);
-
-        const nestedContext = new PipelineItemContext(this, {
-            marketplace: marketplaceName,
+        this.bot.hooks.callHook('pipeline:listen', {
+            event,
+            handler,
+            context: this,
         });
-
-        marketplace.listen(nestedContext, marketplaceEvent, handler);
     }
 }
 
-export class PipelineItemContext extends PipelineContext {
-    marketplace: string;
-    item?: Item;
-    event?: any;
+export abstract class PipelineItemContext extends PipelineContext {
+    item: Item;
 
-    constructor(
-        parent: PipelineContext,
-        {
-            marketplace,
-            item,
-            event,
-        }: { marketplace: string; item?: Item; event?: any },
-    ) {
+    constructor({ parent, item }: { parent: PipelineContext; item: Item }) {
         super(parent.bot);
 
-        this.marketplace = marketplace;
         this.item = item;
-        this.event = event;
     }
 
-    withdraw(): Promise<void> {
-        const marketplace = this.resolveMarketplace(this.marketplace);
-
-        const nestedContext = new PipelineWithdrawContext(this);
-
-        return marketplace.withdraw(nestedContext);
-    }
-}
-
-export class PipelineWithdrawContext extends PipelineItemContext {
-    constructor(parent: PipelineItemContext) {
-        super(parent, {
-            marketplace: parent.marketplace,
-            item: parent.item,
-            event: parent.event,
-        });
-    }
+    abstract withdraw(): Promise<void>;
 
     async scheduleDeposit(
         marketplace: string,
         options: ScheduleDepositOptions,
     ) {
-        console.log(
-            `Scheduled deposit of ${options.amountUsd} USD to ${marketplace}`,
-        );
+        if (!this.item.assetId) {
+            throw new Error(
+                'Asset ID is not defined. Ensure a withdrawal has been made and awaited.',
+            );
+        }
+
+        await appendStorageItem('scheduled-deposits', {
+            marketplace,
+            withdrawMarketplace: this.getMarketplace(),
+            amountUsd: options.amountUsd,
+            assetId: this.item.assetId,
+        });
     }
+
+    abstract getMarketplace(): string;
 }
 
 export function createPipeline(

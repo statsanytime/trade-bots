@@ -1,9 +1,8 @@
-import { Bot } from './index.js';
+import { Bot, PipelineContext, PipelineItemContext } from './index.js';
 
 export interface BotOptions {
     name: string | undefined;
     pipeline: Pipeline;
-    marketplaces: Record<string, any>;
     priceSources: Record<string, any>;
     plugins: Plugin[];
 }
@@ -24,10 +23,12 @@ export interface PipelineItem {
 }
 
 export interface Plugin {
+    name: string;
     boot: (bot: Bot) => void;
 }
 
-export interface ParsedEvent {
-    marketplaceName: string;
-    marketplaceEvent: string;
+export interface PipelineListenHook {
+    event: string;
+    handler: (this: PipelineItemContext, event: any) => void;
+    context: PipelineContext;
 }

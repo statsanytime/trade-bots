@@ -30,7 +30,8 @@
     "dependencies": {
         "citty": "^0.1.4",
         "consola": "^3.2.3",
-        "hookable": "^5.5.3"
+        "hookable": "^5.5.3",
+        "unstorage": "^1.9.0"
     },
     "devDependencies": {
         "@statsanytime/trade-bots-csgoempire": "^0.1.0",

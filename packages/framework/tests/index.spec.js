@@ -1,37 +1,27 @@
+import fs from 'node:fs';
 import {
     afterAll,
     afterEach,
     beforeAll,
+    beforeEach,
     describe,
     expect,
     test,
     vi,
 } from 'vitest';
-import { CSGOEmpire } from 'csgoempire-wrapper';
+import * as CSGOEmpire from 'csgoempire-wrapper';
 import { setupServer } from 'msw/node';
 import { rest } from 'msw';
 import { createCSGOEmpirePlugin } from '@statsanytime/trade-bots-csgoempire';
 import { createPricempirePlugin } from '@statsanytime/trade-bots-pricempire';
 import { createPipeline, startBots, createBot } from '../src/index.ts';
-import { flushPromises } from './utils.js';
-
-vi.mock('csgoempire-wrapper', () => {
-    const tradingSocketOnMock = vi.fn();
-    const makeWithdrawalMock = vi.fn();
-
-    class CSGOEmpireMock {
-        tradingSocket = {
-            on: tradingSocketOnMock,
-            emit: vi.fn(),
-        };
-
-        makeWithdrawal = makeWithdrawalMock;
-    }
-
-    return {
-        CSGOEmpire: CSGOEmpireMock,
-    };
-});
+import {
+    flushPromises,
+    mockSteamTradeOfferManager,
+    mockSteamUser,
+    mockSteamSession,
+} from './utils.js';
+import { createSteamPlugin } from '@statsanytime/trade-bots-steam';
 
 const mswServer = setupServer();
 
@@ -90,6 +80,32 @@ const tradeStatusCompletedEvent = {
 };
 
 describe('index test', () => {
+    let CSGOEmpireMock;
+    let TradeOfferMock;
+
+    beforeEach(() => {
+        CSGOEmpireMock = {
+            tradingSocket: {
+                on: vi.fn(),
+                off: vi.fn(),
+                emit: vi.fn(),
+            },
+
+            makeWithdrawal: vi.fn(),
+        };
+
+        vi.spyOn(CSGOEmpire, 'CSGOEmpire').mockReturnValue(
+            new (class {
+                tradingSocket = CSGOEmpireMock.tradingSocket;
+                makeWithdrawal = CSGOEmpireMock.makeWithdrawal;
+            })(),
+        );
+
+        TradeOfferMock = mockSteamTradeOfferManager();
+        mockSteamUser();
+        mockSteamSession();
+    });
+
     beforeAll(() => mswServer.listen());
 
     afterEach(() => {
@@ -116,16 +132,20 @@ describe('index test', () => {
 
         startBots([bot]);
 
-        const onFn = new CSGOEmpire().tradingSocket.on;
-        const onCallback = onFn.mock.calls[1][1];
+        await flushPromises();
 
-        expect(onFn).toHaveBeenCalledWith('new_item', expect.any(Function));
+        const onCallback = CSGOEmpireMock.tradingSocket.on.mock.calls[1][1];
+
+        expect(CSGOEmpireMock.tradingSocket.on).toHaveBeenCalledWith(
+            'new_item',
+            expect.any(Function),
+        );
 
         onCallback(newItemEvent);
 
         expect(listenFn).toHaveBeenCalledWith(
             expect.objectContaining({
-                pipelineContext: expect.any(Object),
+                bot: expect.any(Object),
                 marketId: newItemEvent.id,
                 marketName: newItemEvent.market_name,
             }),
@@ -149,15 +169,20 @@ describe('index test', () => {
 
         startBots([bot]);
 
-        const onFn = new CSGOEmpire().tradingSocket.on;
-        const withdrawFn = new CSGOEmpire().makeWithdrawal;
-        const onCallback = onFn.mock.calls[1][1];
+        await flushPromises();
 
-        expect(onFn).toHaveBeenCalledWith('new_item', expect.any(Function));
+        const onCallback = CSGOEmpireMock.tradingSocket.on.mock.calls[1][1];
+
+        expect(CSGOEmpireMock.tradingSocket.on).toHaveBeenCalledWith(
+            'new_item',
+            expect.any(Function),
+        );
 
         onCallback(newItemEvent);
 
-        expect(withdrawFn).toHaveBeenCalledWith(newItemEvent.id);
+        expect(CSGOEmpireMock.makeWithdrawal).toHaveBeenCalledWith(
+            newItemEvent.id,
+        );
     });
 
     test('after withdraw works', async () => {
@@ -181,18 +206,27 @@ describe('index test', () => {
 
         startBots([bot]);
 
-        const onFn = new CSGOEmpire().tradingSocket.on;
-        const withdrawFn = new CSGOEmpire().makeWithdrawal;
+        await flushPromises();
 
-        expect(onFn).toHaveBeenCalledWith('new_item', expect.any(Function));
-        const newItemCb = onFn.mock.calls[1][1];
+        expect(CSGOEmpireMock.tradingSocket.on).toHaveBeenCalledWith(
+            'new_item',
+            expect.any(Function),
+        );
+
+        const newItemCb = CSGOEmpireMock.tradingSocket.on.mock.calls[1][1];
 
         newItemCb(newItemEvent);
 
-        expect(withdrawFn).toHaveBeenCalledWith(newItemEvent.id);
+        expect(CSGOEmpireMock.makeWithdrawal).toHaveBeenCalledWith(
+            newItemEvent.id,
+        );
 
-        expect(onFn).toHaveBeenCalledWith('trade_status', expect.any(Function));
-        const tradeStatusCb = onFn.mock.calls[2][1];
+        expect(CSGOEmpireMock.tradingSocket.on).toHaveBeenCalledWith(
+            'trade_status',
+            expect.any(Function),
+        );
+
+        const tradeStatusCb = CSGOEmpireMock.tradingSocket.on.mock.calls[2][1];
 
         expect(afterWithdrawFn).not.toHaveBeenCalled();
 
@@ -247,17 +281,22 @@ describe('index test', () => {
 
         startBots([bot]);
 
-        const onFn = new CSGOEmpire().tradingSocket.on;
-        const withdrawFn = new CSGOEmpire().makeWithdrawal;
-        const onCallback = onFn.mock.calls[1][1];
+        await flushPromises();
 
-        expect(onFn).toHaveBeenCalledWith('new_item', expect.any(Function));
+        const onCallback = CSGOEmpireMock.tradingSocket.on.mock.calls[1][1];
+
+        expect(CSGOEmpireMock.tradingSocket.on).toHaveBeenCalledWith(
+            'new_item',
+            expect.any(Function),
+        );
 
         await flushPromises();
 
         onCallback(newItemEvent);
 
-        expect(withdrawFn).toHaveBeenCalledWith(newItemEvent.id);
+        expect(CSGOEmpireMock.makeWithdrawal).toHaveBeenCalledWith(
+            newItemEvent.id,
+        );
     });
 
     test('csgoempire price usd works', async () => {
@@ -277,8 +316,9 @@ describe('index test', () => {
 
         startBots([bot]);
 
-        const onFn = new CSGOEmpire().tradingSocket.on;
-        const onCallback = onFn.mock.calls[1][1];
+        await flushPromises();
+
+        const onCallback = CSGOEmpireMock.tradingSocket.on.mock.calls[1][1];
 
         onCallback(newItemEvent);
 
@@ -287,5 +327,66 @@ describe('index test', () => {
                 priceUsd: 65.187478500172,
             }),
         );
+    });
+
+    test('schedule deposit works', async () => {
+        const bot = createBot({
+            name: 'test',
+            pipeline: createPipeline('test', function () {
+                this.listen('csgoempire:item-buyable', async function () {
+                    await this.withdraw();
+
+                    this.scheduleDeposit('csgofloat', {
+                        amountUsd: this.item.priceUsd * 1.05,
+                    });
+                });
+            }),
+            plugins: [
+                createCSGOEmpirePlugin({
+                    apiKey: 'testApiKey',
+                }),
+                createSteamPlugin({
+                    accountName: 'test',
+                    password: 'test',
+                    sharedSecret: 'test',
+                    identitySecret: 'test',
+                }),
+            ],
+        });
+
+        startBots([bot]);
+
+        await flushPromises();
+
+        const newItemCb = CSGOEmpireMock.tradingSocket.on.mock.calls[1][1];
+
+        newItemCb(newItemEvent);
+
+        expect(CSGOEmpireMock.makeWithdrawal).toHaveBeenCalledWith(
+            newItemEvent.id,
+        );
+
+        await flushPromises();
+
+        const tradeStatusCb = CSGOEmpireMock.tradingSocket.on.mock.calls[2][1];
+        const managerOnCb = TradeOfferMock.on.mock.calls[0][1];
+
+        tradeStatusCb(tradeStatusCompletedEvent);
+
+        managerOnCb({
+            id: 'test',
+            itemsToGive: [],
+            itemsToReceive: [
+                {
+                    assetid: 'test',
+                    market_hash_name: 'USP-S | Kill Confirmed (Minimal Wear)',
+                },
+            ],
+            accept(cb) {
+                cb(null, 'completed');
+            },
+        });
+
+        expect(fs.existsSync('./tmp/scheduled-deposits')).toBe(true);
     });
 });

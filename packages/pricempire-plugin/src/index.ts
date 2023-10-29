@@ -3,6 +3,8 @@ import { PricempirePriceSource } from './priceSource.js';
 import { PricempirePluginOptions } from './types.js';
 
 class PricempirePlugin implements Plugin {
+    name: string = 'pricempire';
+
     options: PricempirePluginOptions;
 
     constructor(options: PricempirePluginOptions) {
