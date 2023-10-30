@@ -11,24 +11,13 @@ We're not here quite yet. Check back soon!
 Trade bots should be simple. It should be possible to write code like this.
 
 ```javascript
-// index.js
-import { createBot } from '@statsanytime/trade-bots';
-import RedepositorPipeline from './pipelines/redepositor.js';
+import { createBot, createPipeline, listen } from '@statsanytime/trade-bots';
+import { createCSGOFloatPlugin, scheduleDeposit } from '@statsanytime/trade-bots-csgofloat';
+import { createCSGOEmpirePlugin, withdraw } from '@statsanytime/trade-bots-csgoempire';
+import { createSteamPlugin, acceptTradeOffer } from '@statsanytime/trade-bots-steam';
+import { createPricempirePlugin, getPrice } from '@statsanytime/trade-bots-pricempire';
 
-export const bot1 = createBot({
-    pipeline: RedepositorPipeline,
-});
-```
-
-```javascript
-// pipelines/redepositor.js
-import { createPipeline, listen } from '@statsanytime/trade-bots';
-import { scheduleDeposit } from '@statsanytime/trade-bots-csgofloat';
-import { withdraw } from '@statsanytime/trade-bots-csgoempire';
-import { acceptTradeOffer } from '@statsanytime/trade-bots-steam';
-import { getPrice } from '@statsanytime/trade-bots-pricempire';
-
-export const RedepositorPipeline = createPipeline('Redepositor', function () {
+const RedepositorPipeline = createPipeline('Redepositor', function () {
     listen('csgoempire:item-buyable', async (item) => {
         if (item.priceUsd <= getPrice('buff_buy')) {
             await withdraw();
@@ -40,6 +29,16 @@ export const RedepositorPipeline = createPipeline('Redepositor', function () {
             });
         }
     });
+});
+
+export const bot1 = createBot({
+    pipeline: RedepositorPipeline,
+    plugins: [
+        createCSGOEmpirePlugin(...),
+        createPricempirePlugin(...),
+        createSteamPlugin(...),
+        createCSGOFloatPlugin(...),
+    ],
 });
 ```
 
