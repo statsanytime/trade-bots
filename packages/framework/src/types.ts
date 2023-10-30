@@ -1,10 +1,16 @@
-import { Bot, PipelineContext, PipelineItemContext } from './index.js';
+import { Bot, Item } from './index.js';
 
 export interface BotOptions {
     name: string | undefined;
     pipeline: Pipeline;
-    priceSources: Record<string, any>;
     plugins: Plugin[];
+}
+
+export interface ItemOptions {
+    marketName: string;
+    marketId: string | number;
+    priceUsd: number;
+    assetId?: string;
 }
 
 export interface Pipeline {
@@ -12,23 +18,19 @@ export interface Pipeline {
     handler: () => void;
 }
 
-export interface ScheduleDepositOptions {
-    amountUsd: number;
-}
-
-export interface PipelineItem {
-    name: string;
-    marketName: string;
-    marketId: string | number;
-}
-
 export interface Plugin {
     name: string;
-    boot: (bot: Bot) => void;
+    boot?: (bot: Bot) => void;
+}
+
+export interface PipelineContext {
+    bot: Bot;
+    item?: Item;
+    marketplace?: string;
+    event?: any;
 }
 
 export interface PipelineListenHook {
     event: string;
-    handler: (this: PipelineItemContext, event: any) => void;
-    context: PipelineContext;
+    handler: (event: any) => void;
 }

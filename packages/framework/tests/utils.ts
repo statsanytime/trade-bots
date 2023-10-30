@@ -49,13 +49,18 @@ export function mockSteamSession() {
         },
         on(event, cb) {
             if (event === 'authenticated') {
-                cb();
+                cb(null);
             }
+
+            return this;
         },
         getWebCookies() {
             return Promise.resolve([]);
         },
-    };
+    } as Pick<
+        typeof LoginSession.prototype,
+        'startWithCredentials' | 'on' | 'getWebCookies'
+    >;
 
     vi.spyOn(LoginSession.prototype, 'startWithCredentials').mockImplementation(
         SteamSessionMock.startWithCredentials,

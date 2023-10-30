@@ -1,7 +1,25 @@
 import { consola } from 'consola';
 import { createHooks, Hookable } from 'hookable';
-import { PipelineContext } from './pipelines.js';
-import { BotOptions, Pipeline, Plugin } from './types.js';
+import { getContext as unGetContext } from 'unctx';
+import { AsyncLocalStorage } from 'node:async_hooks';
+import { BotOptions, Pipeline, PipelineContext, Plugin } from './types.js';
+
+export const getContext = () =>
+    unGetContext<PipelineContext>('@statsanytime/trade-bots', {
+        asyncContext: true,
+        AsyncLocalStorage,
+    });
+
+export const useContext = () => getContext().use();
+
+export function listen(event: string, handler: (event: any) => void) {
+    const context = useContext();
+
+    context.bot.hooks.callHook('pipeline:listen', {
+        event,
+        handler,
+    });
+}
 
 export async function startBots(bots: Bot[]) {
     for (const bot of bots) {
@@ -9,7 +27,14 @@ export async function startBots(bots: Bot[]) {
             `Started bot ${bot.name} with pipeline ${bot.pipeline.name}`,
         );
 
-        bot.pipeline.handler.call(new PipelineContext(bot));
+        const context = getContext();
+
+        const contextData: PipelineContext = { bot };
+
+        context.call(
+            contextData,
+            () => bot.pipeline.handler(),
+        );
     }
 }
 
@@ -17,7 +42,6 @@ export class Bot {
     name: string | undefined;
     pipeline: Pipeline;
     plugins: Record<string, Plugin>;
-    priceSources: Record<string, any>;
     hooks: Hookable;
 
     constructor(options: BotOptions) {
@@ -33,8 +57,6 @@ export class Bot {
             {} as Record<string, Plugin>,
         );
 
-        this.priceSources = {};
-
         this.hooks = createHooks();
 
         this.bootPlugins();
@@ -42,16 +64,8 @@ export class Bot {
 
     bootPlugins() {
         Object.values(this.plugins).forEach((plugin) => {
-            plugin.boot(this);
+            plugin.boot?.(this);
         });
-    }
-
-    hasPlugin(plugin: string) {
-        return !!this.plugins[plugin];
-    }
-
-    registerPriceSource(key: string, priceSource: any) {
-        this.priceSources[key] = priceSource;
     }
 }
 
@@ -64,3 +78,4 @@ export { createPipeline } from './pipelines.js';
 export * from './types.js';
 export * from './pipelines.js';
 export * from './item.js';
+export * from './storage.js';

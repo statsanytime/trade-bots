@@ -1,4 +1,4 @@
-import { Bot, Plugin } from '@statsanytime/trade-bots';
+import { Bot, Plugin, useContext } from '@statsanytime/trade-bots';
 // @ts-ignore
 import SteamUser from 'steam-user';
 // @ts-ignore
@@ -145,6 +145,40 @@ export class SteamPlugin implements Plugin {
             }
         });
     }
+}
+
+export function acceptTradeOffer() {
+    const context = useContext();
+
+    if (!context.item) {
+        throw new Error(
+            'No item is defined in the context. Make sure an item has been listened for and withdrawn.',
+        );
+    }
+
+    return new Promise((resolve, reject) =>
+        context.bot.hooks.hook('steam:offer-accepted', (offer: any) => {
+            const matchingItem = offer.itemsToReceive.find(
+                (item: any) =>
+                    item.market_hash_name === context.item?.marketName,
+            );
+
+            // If no offer is found after 24 hours, reject the promise
+            const timeout = setTimeout(
+                () => {
+                    reject('No matching item accepted after 24 hours');
+                },
+                24 * 60 * 60 * 1000,
+            );
+
+            if (matchingItem) {
+                context.item!.assetId = matchingItem.assetid;
+
+                resolve(null);
+                clearTimeout(timeout);
+            }
+        }),
+    );
 }
 
 export function createSteamPlugin(options: SteamPluginOptions) {

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { createSteamPlugin } from '@statsanytime/trade-bots-steam';
-import { createPipeline, startBots, createBot } from '../src/index.ts';
+import { createPipeline, startBots, createBot } from '../src/index.js';
 import {
     flushPromises,
     mockSteamSession,

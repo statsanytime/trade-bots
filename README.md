@@ -22,14 +22,20 @@ export const bot1 = createBot({
 
 ```javascript
 // pipelines/redepositor.js
-import { createPipeline } from '@statsanytime/trade-bots';
+import { createPipeline, listen } from '@statsanytime/trade-bots';
+import { scheduleDeposit } from '@statsanytime/trade-bots-csgofloat';
+import { withdraw } from '@statsanytime/trade-bots-csgoempire';
+import { acceptTradeOffer } from '@statsanytime/trade-bots-steam';
+import { getPrice } from '@statsanytime/trade-bots-pricempire';
 
 export const RedepositorPipeline = createPipeline('Redepositor', function () {
-    this.listen('csgoempire:item-buyable', async (item) => {
-        if (item.priceUsd <= item.getPrice('pricempire', 'buff_buy')) {
-            await this.withdraw();
+    listen('csgoempire:item-buyable', async (item) => {
+        if (item.priceUsd <= getPrice('buff_buy')) {
+            await withdraw();
 
-            await this.scheduleDeposit('csgofloat', {
+            await acceptTradeOffer();
+
+            await scheduleDeposit({
                 amountUsd: this.item.priceUsd * 1.05,
             });
         }
