@@ -31,6 +31,7 @@
         "big.js": "^6.2.1",
         "citty": "^0.1.4",
         "consola": "^3.2.3",
+        "dayjs": "^1.11.10",
         "hookable": "^5.5.3",
         "unctx": "^2.3.1",
         "unstorage": "^1.9.0"

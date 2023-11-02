@@ -1,4 +1,4 @@
-import { Bot, Plugin, useContext } from '@statsanytime/trade-bots';
+import { Plugin, useContext } from '@statsanytime/trade-bots';
 // @ts-ignore
 import SteamUser from 'steam-user';
 // @ts-ignore
@@ -12,13 +12,13 @@ import {
     EAuthTokenPlatformType,
     EAuthSessionGuardType,
 } from 'steam-session';
+import consola from 'consola';
 import util from 'util';
 import { SteamPluginOptions } from './types.js';
 
 export class SteamPlugin implements Plugin {
     name = 'steam';
     options: SteamPluginOptions;
-    bot: Bot | undefined;
     user: SteamUser | undefined;
     community: SteamCommunity | undefined;
     manager: TradeOfferManager | undefined;
@@ -27,8 +27,7 @@ export class SteamPlugin implements Plugin {
         this.options = options;
     }
 
-    boot(bot: Bot) {
-        this.bot = bot;
+    boot() {
         this.user = new SteamUser();
         this.community = new SteamCommunity();
 
@@ -96,12 +95,14 @@ export class SteamPlugin implements Plugin {
         try {
             await managerSetCookiesFn(webCookies);
         } catch (err) {
-            console.error('Failed to set cookies for steam trade manager');
-            console.error(err);
+            consola.error('Failed to set cookies for steam trade manager');
+            consola.error(err);
         }
     }
 
     async login() {
+        const context = useContext();
+
         let session = await this.getSession();
 
         await this.authenticateSession(session);
@@ -115,21 +116,17 @@ export class SteamPlugin implements Plugin {
         });
 
         this.user.on('error', async (err: any) => {
-            console.error('An error occurred while logging in');
-            console.error(err);
+            consola.error('An error occurred while logging in');
+            consola.error(err);
         });
 
         this.community.on('sessionExpired', async (err: any) => {
-            console.error(err);
+            consola.error(err);
 
             await this.refreshWebCookies(session);
         });
 
         this.manager.on('newOffer', async (offer: any) => {
-            if (!this.bot) {
-                throw new Error('Bot is not defined');
-            }
-
             if (offer.itemsToGive.length > 0) {
                 return;
             }
@@ -139,9 +136,9 @@ export class SteamPlugin implements Plugin {
             try {
                 await acceptOfferFn();
 
-                this.bot.hooks.callHook('steam:offer-accepted', offer);
+                context.bot.hooks.callHook('steam:offer-accepted', offer);
             } catch (err) {
-                console.error(err);
+                consola.error(err);
             }
         });
     }

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { defineCommand, runMain } from 'citty';
 import { cwd } from 'node:process';
+import consola from 'consola';
 import { startBots, Bot } from './index.js';
 
 async function getBots(): Promise<{
@@ -12,7 +13,7 @@ async function getBots(): Promise<{
 
         return bots;
     } catch (error) {
-        console.error(error);
+        consola.error(error);
         throw new Error(
             'Failed to retrieve bots from index.js. Make sure this file exists in the root directory of your project. If it does, please make an issue on the GitHub repository.',
         );

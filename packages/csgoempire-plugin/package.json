@@ -23,7 +23,8 @@
     "license": "MIT",
     "dependencies": {
         "@statsanytime/trade-bots": "^0.1.0",
-        "csgoempire-wrapper": "^0.1.19"
+        "csgoempire-wrapper": "^0.1.19",
+        "dayjs": "^1.11.10"
     },
     "devDependencies": {
         "@types/node": "^20.6.2",

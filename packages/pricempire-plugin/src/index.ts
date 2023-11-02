@@ -21,11 +21,7 @@ class PricempirePlugin implements Plugin {
         this.apiKey = options.apiKey;
         this.version = options.version || 'v3';
         this.sources = options.sources;
-        this.ofetch = createFetch({
-            fetch: globalThis.fetch,
-            Headers: globalThis.Headers,
-            AbortController: globalThis.AbortController,
-        });
+        this.ofetch = createFetch();
     }
 
     boot() {
@@ -44,7 +40,7 @@ class PricempirePlugin implements Plugin {
                 },
             );
         } catch (e) {
-            console.log(e);
+            consola.log(e);
             consola.error('Failed to fetch prices from Pricempire', e);
         }
     }

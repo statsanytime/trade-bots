@@ -1,3 +1,4 @@
+import { Dayjs } from 'dayjs';
 import { Bot, Item } from './index.js';
 
 export interface BotOptions {
@@ -20,7 +21,7 @@ export interface Pipeline {
 
 export interface Plugin {
     name: string;
-    boot?: (bot: Bot) => void;
+    boot?: () => void;
 }
 
 export interface PipelineContext {
@@ -28,9 +29,23 @@ export interface PipelineContext {
     item?: Item;
     marketplace?: string;
     event?: any;
+    withdrawnAt?: Dayjs;
 }
 
 export interface PipelineListenHook {
     event: string;
     handler: (event: any) => void;
+}
+
+export interface ScheduleDepositOptions {
+    marketplace: string;
+    withdrawMarketplace: string;
+    amountUsd: number;
+    assetId: string;
+    marketplaceData?: Record<string, any>;
+    withdrawnAt: string;
+}
+
+export interface ScheduledDeposit extends ScheduleDepositOptions {
+    //
 }

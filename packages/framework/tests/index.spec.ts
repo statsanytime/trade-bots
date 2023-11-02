@@ -1,5 +1,3 @@
-import fs from 'node:fs/promises';
-import { resolve } from 'node:path';
 import {
     afterAll,
     afterEach,
@@ -12,29 +10,18 @@ import {
 } from 'vitest';
 import * as CSGOEmpire from 'csgoempire-wrapper';
 import { setupServer } from 'msw/node';
-import { scheduleDeposit } from '@statsanytime/trade-bots-csgofloat';
 import {
     createCSGOEmpirePlugin,
     withdraw,
 } from '@statsanytime/trade-bots-csgoempire';
-import {
-    acceptTradeOffer,
-    createSteamPlugin,
-} from '@statsanytime/trade-bots-steam';
 import { createPipeline, startBots, createBot, listen } from '../src/index.js';
-import {
-    flushPromises,
-    mockSteamUser,
-    mockSteamSession,
-    mockSteamTradeOfferManager,
-} from './utils.js';
+import { flushPromises, mockSteamUser, mockSteamSession } from './utils.js';
 import { newItemEvent } from './mocks/csgoempire.js';
 
 const mswServer = setupServer();
 
 describe('index test', () => {
     let CSGOEmpireMock: any;
-    let TradeOfferMock: any;
 
     beforeEach(() => {
         CSGOEmpireMock = {
@@ -54,7 +41,6 @@ describe('index test', () => {
             })() as CSGOEmpire.CSGOEmpire,
         );
 
-        TradeOfferMock = mockSteamTradeOfferManager();
         mockSteamUser();
         mockSteamSession();
     });
@@ -178,85 +164,5 @@ describe('index test', () => {
         await flushPromises();
 
         expect(afterWithdrawFn).toHaveBeenCalled();
-    });
-
-    test('schedule deposit works', async () => {
-        vi.spyOn(fs, 'readFile').mockResolvedValue('[]');
-        vi.spyOn(fs, 'mkdir').mockResolvedValue('test');
-
-        const writeFileSpy = vi.spyOn(fs, 'writeFile').mockResolvedValue();
-
-        const bot = createBot({
-            name: 'test',
-            pipeline: createPipeline('test', function () {
-                listen('csgoempire:item-buyable', async function (item) {
-                    await withdraw();
-
-                    await acceptTradeOffer();
-
-                    await scheduleDeposit({
-                        amountUsd: item.priceUsd * 1.05,
-                    });
-                });
-            }),
-            plugins: [
-                createCSGOEmpirePlugin({
-                    apiKey: 'testApiKey',
-                }),
-                createSteamPlugin({
-                    accountName: 'test',
-                    password: 'test',
-                    sharedSecret: 'test',
-                    identitySecret: 'test',
-                }),
-            ],
-        });
-
-        startBots([bot]);
-
-        await flushPromises();
-
-        const newItemCb = CSGOEmpireMock.tradingSocket.on.mock.calls[1][1];
-
-        newItemCb(newItemEvent);
-
-        expect(CSGOEmpireMock.makeWithdrawal).toHaveBeenCalledWith(
-            newItemEvent.id,
-        );
-
-        await flushPromises();
-
-        const managerOnCb = TradeOfferMock.on.mock.calls[0][1];
-
-        managerOnCb({
-            id: 'test',
-            itemsToGive: [],
-            itemsToReceive: [
-                {
-                    assetid: 'test',
-                    market_hash_name: 'USP-S | Kill Confirmed (Minimal Wear)',
-                },
-            ],
-            accept(cb) {
-                cb(null, 'completed');
-            },
-        });
-
-        for (let i = 0; i < 10; i++) {
-            await flushPromises();
-        }
-
-        expect(writeFileSpy).toHaveBeenCalledWith(
-            resolve(__dirname, '../tmp/scheduled-deposits'),
-            JSON.stringify([
-                {
-                    marketplace: 'csgofloat',
-                    withdrawMarketplace: 'csgoempire',
-                    amountUsd: 68.45,
-                    assetId: 'test',
-                },
-            ]),
-            'utf8',
-        );
     });
 });

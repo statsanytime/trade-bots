@@ -200,3 +200,7 @@ export type InitSocketEvent =
 export interface CSGOEmpirePluginOptions {
     apiKey: string;
 }
+
+export interface CSGOEmpireScheduleDepositOptions {
+    amountUsd: number;
+}

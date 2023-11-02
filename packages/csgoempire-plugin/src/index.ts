@@ -1,13 +1,22 @@
 import {
-    Bot,
     Item,
-    type Plugin,
-    type PipelineListenHook,
     getContext,
     useContext,
+    scheduleDeposit as frameworkScheduleDeposit,
+    type Plugin,
+    type PipelineListenHook,
+    getScheduledDeposits,
+    depositIsTradable,
 } from '@statsanytime/trade-bots';
+import Big from 'big.js';
+import consola from 'consola';
 import { CSGOEmpire } from 'csgoempire-wrapper';
-import { CSGOEmpireNewItemEvent, CSGOEmpirePluginOptions } from './types.js';
+import {
+    CSGOEmpireNewItemEvent,
+    CSGOEmpirePluginOptions,
+    CSGOEmpireScheduleDepositOptions,
+} from './types.js';
+import dayjs from 'dayjs';
 
 const USD_TO_COINS_RATE = 1.62792;
 
@@ -29,7 +38,9 @@ class CSGOEmpirePlugin implements Plugin {
         this.account = null;
     }
 
-    boot(bot: Bot) {
+    boot() {
+        const context = useContext();
+
         this.account = new CSGOEmpire(this.options.apiKey, {
             connectToSocket: true,
         });
@@ -38,7 +49,7 @@ class CSGOEmpirePlugin implements Plugin {
             this.account!.tradingSocket.emit('filters', {});
         });
 
-        bot.hooks.hook(
+        context.bot.hooks.hook(
             'pipeline:listen',
             ({ event, handler }: PipelineListenHook) => {
                 const listeners = {
@@ -51,6 +62,8 @@ class CSGOEmpirePlugin implements Plugin {
                 }
             },
         );
+
+        setInterval(this.checkScheduledDeposits.bind(this), 1000 * 60 * 5);
     }
 
     listenForItemBuyable({ handler }: Omit<PipelineListenHook, 'event'>) {
@@ -79,6 +92,47 @@ class CSGOEmpirePlugin implements Plugin {
             },
         );
     }
+
+    async checkScheduledDeposits() {
+        const deposits = await getScheduledDeposits({
+            marketplace: MARKETPLACE,
+        });
+
+        const toDeposit = deposits.filter((deposit) =>
+            depositIsTradable(dayjs(deposit.withdrawnAt!)),
+        );
+
+        for (const deposit of toDeposit) {
+            try {
+                // TODO: IMPLEMENT
+            } catch (err) {
+                consola.error(err);
+                consola.error('Failed to deposit item', deposit);
+            }
+        }
+    }
+}
+
+export async function scheduleDeposit(
+    options: CSGOEmpireScheduleDepositOptions,
+) {
+    const context = useContext();
+
+    const amountUsd = new Big(options.amountUsd);
+
+    if (!context.item?.assetId) {
+        throw new Error(
+            'Asset ID is not defined. Ensure a withdrawal has been made and awaited.',
+        );
+    }
+
+    await frameworkScheduleDeposit({
+        marketplace: MARKETPLACE,
+        withdrawMarketplace: context.marketplace!,
+        amountUsd: amountUsd.round(2).toNumber(),
+        assetId: context.item.assetId,
+        withdrawnAt: context.withdrawnAt!.toISOString(),
+    });
 }
 
 export async function withdraw() {
@@ -87,6 +141,8 @@ export async function withdraw() {
     const plugin = context.bot.plugins['csgoempire'] as CSGOEmpirePlugin;
 
     await plugin.account!.makeWithdrawal(context.event.id);
+
+    context.withdrawnAt = dayjs();
 }
 
 export function createCSGOEmpirePlugin(options: CSGOEmpirePluginOptions) {
