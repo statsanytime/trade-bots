@@ -16,7 +16,7 @@ export interface ItemOptions {
 
 export interface Pipeline {
     name: string;
-    handler: () => void;
+    handler: () => void | Promise<void>;
 }
 
 export interface Plugin {
@@ -34,7 +34,7 @@ export interface PipelineContext {
 
 export interface PipelineListenHook {
     event: string;
-    handler: (event: any) => void;
+    handler: (event: any) => void | Promise<void>;
 }
 
 export interface ScheduleDepositOptions {

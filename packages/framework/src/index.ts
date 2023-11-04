@@ -14,6 +14,7 @@ import type {
     ScheduledDeposit,
 } from './types.js';
 import { appendStorageItem, storage } from './storage.js';
+import { handleError } from './errors.js';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -89,10 +90,13 @@ export async function startBots(bots: Bot[]) {
 
         const contextData: PipelineContext = { bot };
 
-        context.call(contextData, () => {
-            bot.bootPlugins();
-
-            bot.pipeline.handler();
+        context.call(contextData, async () => {
+            try {
+                await bot.bootPlugins();
+                await bot.pipeline.handler();
+            } catch (err) {
+                handleError(err);
+            }
         });
     }
 }
@@ -119,8 +123,12 @@ export class Bot {
         this.hooks = createHooks();
     }
 
-    bootPlugins() {
-        Object.values(this.plugins).forEach((plugin) => plugin.boot?.());
+    bootPlugins(): Promise<void[]> {
+        return Promise.all(
+            Object.values(this.plugins)
+                .map((plugin) => plugin.boot?.())
+                .filter(Boolean),
+        );
     }
 }
 
@@ -134,3 +142,4 @@ export * from './types.js';
 export * from './pipelines.js';
 export * from './item.js';
 export * from './storage.js';
+export * from './errors.js';

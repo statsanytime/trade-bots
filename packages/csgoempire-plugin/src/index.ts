@@ -7,6 +7,8 @@ import {
     type PipelineListenHook,
     getScheduledDeposits,
     depositIsTradable,
+    handleError,
+    SilentError,
 } from '@statsanytime/trade-bots';
 import Big from 'big.js';
 import consola from 'consola';
@@ -86,8 +88,12 @@ class CSGOEmpirePlugin implements Plugin {
                     marketplace: MARKETPLACE,
                 };
 
-                context.call(newContext, function () {
-                    handler(item);
+                context.call(newContext, async () => {
+                    try {
+                        await handler(item);
+                    } catch (err) {
+                        handleError(err);
+                    }
                 });
             },
         );
@@ -140,9 +146,13 @@ export async function withdraw() {
 
     const plugin = context.bot.plugins['csgoempire'] as CSGOEmpirePlugin;
 
-    await plugin.account!.makeWithdrawal(context.event.id);
+    try {
+        await plugin.account!.makeWithdrawal(context.event.id);
 
-    context.withdrawnAt = dayjs();
+        context.withdrawnAt = dayjs();
+    } catch (err) {
+        throw new SilentError('Failed to withdraw item', err);
+    }
 }
 
 export function createCSGOEmpirePlugin(options: CSGOEmpirePluginOptions) {

@@ -165,4 +165,36 @@ describe('index test', () => {
 
         expect(afterWithdrawFn).toHaveBeenCalled();
     });
+
+    test('no exception is thrown on failed withdrawal', async () => {
+        CSGOEmpireMock.makeWithdrawal.mockRejectedValueOnce(
+            new Error('test error'),
+        );
+
+        const bot = createBot({
+            name: 'test',
+            pipeline: createPipeline('test', function () {
+                listen('csgoempire:item-buyable', async function () {
+                    await withdraw();
+                });
+            }),
+            plugins: [
+                createCSGOEmpirePlugin({
+                    apiKey: 'testApiKey',
+                }),
+            ],
+        });
+
+        startBots([bot]);
+
+        await flushPromises();
+
+        const onCallback = CSGOEmpireMock.tradingSocket.on.mock.calls[1][1];
+
+        onCallback(newItemEvent);
+
+        expect(CSGOEmpireMock.makeWithdrawal).toHaveBeenCalledWith(
+            newItemEvent.id,
+        );
+    });
 });
