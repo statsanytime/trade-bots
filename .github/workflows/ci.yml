@@ -1,0 +1,39 @@
+name: ci
+
+on:
+    push:
+        branches:
+            - main
+            - master
+    pull_request:
+        branches:
+            - main
+            - master
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+        if: github.event_name == 'push'
+        steps:
+            - name: Checkout frontend 🛎
+              uses: actions/checkout@master
+
+            - name: Setup node env 🏗
+              uses: actions/setup-node@v3
+              with:
+                  node-version: 20.9.0
+                  check-latest: true
+
+            - name: Install dependencies 👨🏻‍💻
+              run: npm ci --prefer-offline --no-audit --no-optional
+
+            - name: Build
+              run: npm run build
+              working-directory: ./packages/framework
+
+            - name: Execute tests
+              run: npm run test
+              working-directory: ./packages/framework
+
+            - name: Check prettier
+              run: npm run prettier-check
