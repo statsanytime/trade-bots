@@ -16,8 +16,7 @@
         "dist"
     ],
     "scripts": {
-        "build": "unbuild",
-        "prettier": "prettier --write ."
+        "build": "unbuild"
     },
     "author": "Pixel",
     "license": "MIT",
