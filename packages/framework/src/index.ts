@@ -1,5 +1,5 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
-import { consola } from 'consola';
+import consola from 'consola';
 import { createHooks, Hookable } from 'hookable';
 import { getContext as unGetContext } from 'unctx';
 import dayjs, { Dayjs } from 'dayjs';

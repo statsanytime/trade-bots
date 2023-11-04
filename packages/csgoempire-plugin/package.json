@@ -31,5 +31,11 @@
         "prettier": "3.0.3",
         "unbuild": "^2.0.0",
         "vitest": "^0.34.5"
+    },
+    "unbuild": {
+        "externals": [
+            "big.js",
+            "consola"
+        ]
     }
 }

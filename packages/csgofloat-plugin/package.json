@@ -30,5 +30,11 @@
     "devDependencies": {
         "@types/node": "^20.6.2",
         "unbuild": "^2.0.0"
+    },
+    "unbuild": {
+        "externals": [
+            "big.js",
+            "consola"
+        ]
     }
 }
