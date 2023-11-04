@@ -27,9 +27,25 @@ jobs:
             - name: Install dependencies 👨🏻‍💻
               run: npm ci --prefer-offline --no-audit --no-optional
 
-            - name: Build
+            - name: Build framework
               run: npm run build
               working-directory: ./packages/framework
+
+            - name: Build CSGOEmpire plugin
+              run: npm run build
+              working-directory: ./packages/csgoempire-plugin
+
+            - name: Build CSGOFloat plugin
+              run: npm run build
+              working-directory: ./packages/csgofloat-plugin
+
+            - name: Build Pricempire plugin
+              run: npm run build
+              working-directory: ./packages/pricempire-plugin
+
+            - name: Build Steam plugin
+              run: npm run build
+              working-directory: ./packages/steam-plugin
 
             - name: Execute tests
               run: npm run test
