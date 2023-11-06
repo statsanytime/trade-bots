@@ -25,6 +25,11 @@
         "stattb": "node dist/stattb.mjs",
         "test": "vitest"
     },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/statsanytime/trade-bots.git"
+    },
+    "homepage": "https://github.com/statsanytime/trade-bots",
     "author": "Pixel",
     "license": "MIT",
     "dependencies": {
