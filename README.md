@@ -4,7 +4,7 @@ Simple framework for building CS:GO trade-bots!
 
 # Installation
 
-We're not here quite yet. Check back soon!
+We are currently in alpha so there is no official installation path for now. Feel free to manually install and play around with the packages, though.
 
 # Motivation
 
