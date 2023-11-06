@@ -45,5 +45,3 @@ export const bot1 = createBot({
 # Structure
 
 The main logic is kept in the `@statsanytime/trade-bots` package which is available in the `packages/framework` folder in this repository.
-
-Any apps you create should use this package as a dependency. An example of this can be found within `packages/redepositor`.
