@@ -8,9 +8,7 @@ import {
     test,
     vi,
 } from 'vitest';
-import * as CSGOEmpire from 'csgoempire-wrapper';
 import { setupServer } from 'msw/node';
-import { rest } from 'msw';
 import {
     createCSGOEmpirePlugin,
     withdraw,
@@ -20,8 +18,14 @@ import {
     getPrice,
 } from '@statsanytime/trade-bots-pricempire';
 import { createPipeline, startBots, createBot, listen } from '../src/index.js';
-import { flushPromises, mockSteamUser, mockSteamSession } from './utils.js';
-import { newItemEvent } from './mocks/csgoempire.js';
+import {
+    flushPromises,
+    mockSteamUser,
+    mockSteamSession,
+    mockCSGOEmpire,
+} from './utils.js';
+import { newItemEvent, mswWithdraw } from './mocks/csgoempire.js';
+import { mswItemPrices } from './mocks/pricempire.js';
 
 const mswServer = setupServer();
 
@@ -29,23 +33,7 @@ describe('index test', () => {
     let CSGOEmpireMock: any;
 
     beforeEach(() => {
-        CSGOEmpireMock = {
-            tradingSocket: {
-                on: vi.fn(),
-                off: vi.fn(),
-                emit: vi.fn(),
-            },
-
-            makeWithdrawal: vi.fn(),
-        };
-
-        vi.spyOn(CSGOEmpire, 'CSGOEmpire').mockReturnValue(
-            new (class {
-                tradingSocket = CSGOEmpireMock.tradingSocket;
-                makeWithdrawal = CSGOEmpireMock.makeWithdrawal;
-            })() as CSGOEmpire.CSGOEmpire,
-        );
-
+        CSGOEmpireMock = mockCSGOEmpire();
         mockSteamUser();
         mockSteamSession();
     });
@@ -60,26 +48,7 @@ describe('index test', () => {
     afterAll(() => mswServer.close());
 
     test('price sources work', async () => {
-        mswServer.use(
-            rest.get(
-                'https://api.pricempire.com/v3/items/prices',
-                (req, res, ctx) => {
-                    return res(
-                        ctx.json({
-                            'USP-S | Kill Confirmed (Minimal Wear)': {
-                                buff_buy: {
-                                    isInflated: false,
-                                    price: 1000,
-                                    count: 18,
-                                    avg30: 16,
-                                    createdAt: '2023-09-23T12:42:46.690Z',
-                                },
-                            },
-                        }),
-                    );
-                },
-            ),
-        );
+        mswServer.use(mswItemPrices, mswWithdraw);
 
         const bot = createBot({
             name: 'test',
@@ -106,18 +75,16 @@ describe('index test', () => {
 
         await flushPromises();
 
-        const onCallback = CSGOEmpireMock.tradingSocket.on.mock.calls[1][1];
-
-        expect(CSGOEmpireMock.tradingSocket.on).toHaveBeenCalledWith(
+        expect(CSGOEmpireMock.sockets.trading.on).toHaveBeenCalledWith(
             'new_item',
             expect.any(Function),
         );
 
         await flushPromises();
 
-        onCallback(newItemEvent);
+        await CSGOEmpireMock.listeners['trading:new_item'](newItemEvent);
 
-        expect(CSGOEmpireMock.makeWithdrawal).toHaveBeenCalledWith(
+        expect(CSGOEmpireMock.makeWithdrawalSpy).toHaveBeenCalledWith(
             newItemEvent.id,
         );
     });
@@ -141,9 +108,7 @@ describe('index test', () => {
 
         await flushPromises();
 
-        const onCallback = CSGOEmpireMock.tradingSocket.on.mock.calls[1][1];
-
-        onCallback(newItemEvent);
+        await CSGOEmpireMock.listeners['trading:new_item'](newItemEvent);
 
         expect(listenMock).toHaveBeenCalledWith(
             expect.objectContaining({

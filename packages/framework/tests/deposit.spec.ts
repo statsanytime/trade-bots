@@ -11,7 +11,6 @@ import {
     test,
     vi,
 } from 'vitest';
-import { CSGOEmpire } from 'csgoempire-wrapper';
 import { setupServer } from 'msw/node';
 import { rest } from 'msw';
 import {
@@ -38,6 +37,7 @@ import {
     mockSteamUser,
     mockSteamSession,
     mockSteamTradeOfferManager,
+    mockCSGOEmpire,
 } from './utils.js';
 import {
     newItemEvent,
@@ -50,8 +50,10 @@ const mswServer = setupServer();
 
 describe('deposit test', () => {
     let TradeOfferMock: any;
+    let CSGOEmpireMock: any;
 
     beforeEach(() => {
+        CSGOEmpireMock = mockCSGOEmpire();
         TradeOfferMock = mockSteamTradeOfferManager();
         mockSteamUser();
         mockSteamSession();
@@ -72,26 +74,6 @@ describe('deposit test', () => {
         vi.spyOn(fs, 'mkdir').mockResolvedValue(undefined);
 
         const writeFileSpy = vi.spyOn(fs, 'writeFile').mockResolvedValue();
-
-        const makeWithdrawalSpy = vi.spyOn(
-            CSGOEmpire.prototype,
-            'makeWithdrawal',
-        );
-
-        const listeners = {};
-
-        vi.spyOn(
-            CSGOEmpire.prototype,
-            'connectAndAuthenticateSocket',
-        ).mockImplementation(function (key) {
-            this.sockets[key] = {
-                on: vi.fn((event, cb) => {
-                    listeners[`${key}:${event}`] = cb;
-                }),
-            };
-
-            return this.sockets[key];
-        });
 
         const bot = createBot({
             name: 'test',
@@ -127,9 +109,11 @@ describe('deposit test', () => {
 
         await flushPromises();
 
-        await listeners['trading:new_item'](newItemEvent);
+        await CSGOEmpireMock.listeners['trading:new_item'](newItemEvent);
 
-        expect(makeWithdrawalSpy).toHaveBeenCalledWith(newItemEvent.id);
+        expect(CSGOEmpireMock.makeWithdrawalSpy).toHaveBeenCalledWith(
+            newItemEvent.id,
+        );
 
         await flushPromises();
 

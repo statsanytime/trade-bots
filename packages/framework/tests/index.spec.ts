@@ -8,14 +8,18 @@ import {
     test,
     vi,
 } from 'vitest';
-import * as CSGOEmpire from 'csgoempire-wrapper';
 import { setupServer } from 'msw/node';
 import {
     createCSGOEmpirePlugin,
     withdraw,
 } from '@statsanytime/trade-bots-csgoempire';
 import { createPipeline, startBots, createBot, listen } from '../src/index.js';
-import { flushPromises, mockSteamUser, mockSteamSession } from './utils.js';
+import {
+    flushPromises,
+    mockSteamUser,
+    mockSteamSession,
+    mockCSGOEmpire,
+} from './utils.js';
 import { newItemEvent } from './mocks/csgoempire.js';
 
 const mswServer = setupServer();
@@ -24,23 +28,7 @@ describe('index test', () => {
     let CSGOEmpireMock: any;
 
     beforeEach(() => {
-        CSGOEmpireMock = {
-            tradingSocket: {
-                on: vi.fn(),
-                off: vi.fn(),
-                emit: vi.fn(),
-            },
-
-            makeWithdrawal: vi.fn(),
-        };
-
-        vi.spyOn(CSGOEmpire, 'CSGOEmpire').mockReturnValue(
-            new (class {
-                tradingSocket = CSGOEmpireMock.tradingSocket;
-                makeWithdrawal = CSGOEmpireMock.makeWithdrawal;
-            })() as CSGOEmpire.CSGOEmpire,
-        );
-
+        CSGOEmpireMock = mockCSGOEmpire();
         mockSteamUser();
         mockSteamSession();
     });
@@ -73,14 +61,12 @@ describe('index test', () => {
 
         await flushPromises();
 
-        const onCallback = CSGOEmpireMock.tradingSocket.on.mock.calls[1][1];
-
-        expect(CSGOEmpireMock.tradingSocket.on).toHaveBeenCalledWith(
+        expect(CSGOEmpireMock.sockets.trading.on).toHaveBeenCalledWith(
             'new_item',
             expect.any(Function),
         );
 
-        onCallback(newItemEvent);
+        await CSGOEmpireMock.listeners['trading:new_item'](newItemEvent);
 
         expect(listenFn).toHaveBeenCalledWith(
             expect.objectContaining({
@@ -109,16 +95,14 @@ describe('index test', () => {
 
         await flushPromises();
 
-        const onCallback = CSGOEmpireMock.tradingSocket.on.mock.calls[1][1];
-
-        expect(CSGOEmpireMock.tradingSocket.on).toHaveBeenCalledWith(
+        expect(CSGOEmpireMock.sockets.trading.on).toHaveBeenCalledWith(
             'new_item',
             expect.any(Function),
         );
 
-        onCallback(newItemEvent);
+        await CSGOEmpireMock.listeners['trading:new_item'](newItemEvent);
 
-        expect(CSGOEmpireMock.makeWithdrawal).toHaveBeenCalledWith(
+        expect(CSGOEmpireMock.makeWithdrawalSpy).toHaveBeenCalledWith(
             newItemEvent.id,
         );
     });
@@ -146,16 +130,14 @@ describe('index test', () => {
 
         await flushPromises();
 
-        expect(CSGOEmpireMock.tradingSocket.on).toHaveBeenCalledWith(
+        expect(CSGOEmpireMock.sockets.trading.on).toHaveBeenCalledWith(
             'new_item',
             expect.any(Function),
         );
 
-        const newItemCb = CSGOEmpireMock.tradingSocket.on.mock.calls[1][1];
+        await CSGOEmpireMock.listeners['trading:new_item'](newItemEvent);
 
-        newItemCb(newItemEvent);
-
-        expect(CSGOEmpireMock.makeWithdrawal).toHaveBeenCalledWith(
+        expect(CSGOEmpireMock.makeWithdrawalSpy).toHaveBeenCalledWith(
             newItemEvent.id,
         );
 
@@ -167,7 +149,7 @@ describe('index test', () => {
     });
 
     test('no exception is thrown on failed withdrawal', async () => {
-        CSGOEmpireMock.makeWithdrawal.mockRejectedValueOnce(
+        CSGOEmpireMock.makeWithdrawalSpy.mockRejectedValueOnce(
             new Error('test error'),
         );
 
@@ -189,11 +171,9 @@ describe('index test', () => {
 
         await flushPromises();
 
-        const onCallback = CSGOEmpireMock.tradingSocket.on.mock.calls[1][1];
+        await CSGOEmpireMock.listeners['trading:new_item'](newItemEvent);
 
-        onCallback(newItemEvent);
-
-        expect(CSGOEmpireMock.makeWithdrawal).toHaveBeenCalledWith(
+        expect(CSGOEmpireMock.makeWithdrawalSpy).toHaveBeenCalledWith(
             newItemEvent.id,
         );
     });
