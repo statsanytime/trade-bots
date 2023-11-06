@@ -24,8 +24,8 @@ class PricempirePlugin implements Plugin {
         this.ofetch = createFetch();
     }
 
-    boot() {
-        this.fetchPrices();
+    async boot() {
+        await this.fetchPrices();
     }
 
     async fetchPrices() {

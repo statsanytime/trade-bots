@@ -27,7 +27,7 @@ export class SteamPlugin implements Plugin {
         this.options = options;
     }
 
-    boot() {
+    async boot() {
         this.user = new SteamUser();
         this.community = new SteamCommunity();
 
@@ -37,7 +37,7 @@ export class SteamPlugin implements Plugin {
             language: 'en',
         });
 
-        this.login();
+        await this.login();
     }
 
     async getSession(): Promise<LoginSession> {
