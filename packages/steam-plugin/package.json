@@ -1,6 +1,6 @@
 {
     "name": "@statsanytime/trade-bots-steam",
-    "version": "1.0.0-alpha.0",
+    "version": "1.0.0-alpha.1",
     "type": "module",
     "exports": {
         ".": {
@@ -22,7 +22,7 @@
     "author": "Pixel",
     "license": "MIT",
     "dependencies": {
-        "@statsanytime/trade-bots": "^1.0.0-alpha.0",
+        "@statsanytime/trade-bots": "^1.0.0-alpha.1",
         "steam-session": "^1.4.1",
         "steam-totp": "^2.1.2",
         "steam-tradeoffer-manager": "^2.10.6",

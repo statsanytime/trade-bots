@@ -1,6 +1,6 @@
 {
     "name": "@statsanytime/trade-bots-pricempire",
-    "version": "1.0.0-alpha.0",
+    "version": "1.0.0-alpha.1",
     "type": "module",
     "exports": {
         ".": {
@@ -22,7 +22,7 @@
     "author": "Pixel",
     "license": "MIT",
     "dependencies": {
-        "@statsanytime/trade-bots": "^1.0.0-alpha.0",
+        "@statsanytime/trade-bots": "^1.0.0-alpha.1",
         "@types/lodash": "^4.14.199",
         "consola": "^3.2.3",
         "lodash": "^4.17.21",
