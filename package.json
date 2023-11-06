@@ -1,16 +1,16 @@
 {
-  "name": "statsanytime-trade-bots",
-  "private": true,
-  "workspaces": [
-    "packages/*"
-  ],
-  "scripts": {
-    "prettier": "prettier --write .",
-    "prettier-check": "prettier --check ."
-  },
-  "devDependencies": {
-    "lerna": "^7.4.2",
-    "prettier": "^3.0.3"
-  },
-  "dependencies": {}
+    "name": "statsanytime-trade-bots",
+    "private": true,
+    "workspaces": [
+        "packages/*"
+    ],
+    "scripts": {
+        "prettier": "prettier --write .",
+        "prettier-check": "prettier --check ."
+    },
+    "devDependencies": {
+        "lerna": "^7.4.2",
+        "prettier": "^3.0.3"
+    },
+    "dependencies": {}
 }
