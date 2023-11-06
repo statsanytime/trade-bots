@@ -1,7 +1,7 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import consola from 'consola';
 import { createHooks, Hookable } from 'hookable';
-import { getContext as unGetContext } from 'unctx';
+import { getContext as unGetContext, UseContext } from 'unctx';
 import dayjs, { Dayjs } from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
@@ -27,13 +27,25 @@ export const getContext = () =>
 
 export const useContext = () => getContext().use();
 
-export function listen(event: string, handler: (event: any) => void) {
+export function listen(
+    event: string,
+    handler: (event: any) => void | Promise<void>,
+) {
     const context = useContext();
 
-    context.bot.hooks.callHook('pipeline:listen', {
-        event,
-        handler,
-    });
+    context.bot.hooks.callHook('pipeline:listen', event);
+
+    if (!context.bot.eventHandlers[event]) {
+        context.bot.eventHandlers[event] = [];
+    }
+
+    context.bot.eventHandlers[event].push(handler);
+}
+
+export async function triggerEvent(event: string, data: any) {
+    const context = useContext();
+
+    return context.bot.triggerEvent(event, data);
 }
 
 export function scheduleDeposit(options: ScheduleDepositOptions) {
@@ -106,6 +118,7 @@ export class Bot {
     pipeline: Pipeline;
     plugins: Record<string, Plugin>;
     hooks: Hookable;
+    eventHandlers: Record<string, ((event: any) => void | Promise<void>)[]>;
 
     constructor(options: BotOptions) {
         this.name = options.name;
@@ -121,6 +134,7 @@ export class Bot {
         );
 
         this.hooks = createHooks();
+        this.eventHandlers = {};
     }
 
     bootPlugins(): Promise<void[]> {
@@ -128,6 +142,16 @@ export class Bot {
             Object.values(this.plugins)
                 .map((plugin) => plugin.boot?.())
                 .filter(Boolean),
+        );
+    }
+
+    triggerEvent(event: string, data: any) {
+        if (!this.eventHandlers[event]) {
+            return;
+        }
+
+        return Promise.all(
+            this.eventHandlers[event].map((handler) => handler(data)),
         );
     }
 }

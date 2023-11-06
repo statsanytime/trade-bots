@@ -9,7 +9,7 @@ import {
 } from './utils.js';
 
 describe('steam test', () => {
-    let TradeOfferMock;
+    let TradeOfferMock: any;
 
     beforeEach(() => {
         TradeOfferMock = mockSteamTradeOfferManager();

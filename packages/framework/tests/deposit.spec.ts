@@ -11,7 +11,7 @@ import {
     test,
     vi,
 } from 'vitest';
-import * as CSGOEmpire from 'csgoempire-wrapper';
+import { CSGOEmpire } from 'csgoempire-wrapper';
 import { setupServer } from 'msw/node';
 import { rest } from 'msw';
 import {
@@ -39,33 +39,19 @@ import {
     mockSteamSession,
     mockSteamTradeOfferManager,
 } from './utils.js';
-import { newItemEvent } from './mocks/csgoempire.js';
+import {
+    newItemEvent,
+    mswUserInventory,
+    mswWithdraw,
+} from './mocks/csgoempire.js';
 import dayjs from 'dayjs';
 
 const mswServer = setupServer();
 
-describe('index test', () => {
-    let CSGOEmpireMock: any;
+describe('deposit test', () => {
     let TradeOfferMock: any;
 
     beforeEach(() => {
-        CSGOEmpireMock = {
-            tradingSocket: {
-                on: vi.fn(),
-                off: vi.fn(),
-                emit: vi.fn(),
-            },
-
-            makeWithdrawal: vi.fn(),
-        };
-
-        vi.spyOn(CSGOEmpire, 'CSGOEmpire').mockReturnValue(
-            new (class {
-                tradingSocket = CSGOEmpireMock.tradingSocket;
-                makeWithdrawal = CSGOEmpireMock.makeWithdrawal;
-            })() as CSGOEmpire.CSGOEmpire,
-        );
-
         TradeOfferMock = mockSteamTradeOfferManager();
         mockSteamUser();
         mockSteamSession();
@@ -74,17 +60,38 @@ describe('index test', () => {
     beforeAll(() => mswServer.listen());
 
     afterEach(() => {
-        vi.resetAllMocks();
         mswServer.resetHandlers();
     });
 
     afterAll(() => mswServer.close());
 
     test('schedule deposit works', async () => {
+        mswServer.use(mswWithdraw);
+
         vi.spyOn(fs, 'readFile').mockResolvedValue('[]');
         vi.spyOn(fs, 'mkdir').mockResolvedValue(undefined);
 
         const writeFileSpy = vi.spyOn(fs, 'writeFile').mockResolvedValue();
+
+        const makeWithdrawalSpy = vi.spyOn(
+            CSGOEmpire.prototype,
+            'makeWithdrawal',
+        );
+
+        const listeners = {};
+
+        vi.spyOn(
+            CSGOEmpire.prototype,
+            'connectAndAuthenticateSocket',
+        ).mockImplementation(function (key) {
+            this.sockets[key] = {
+                on: vi.fn((event, cb) => {
+                    listeners[`${key}:${event}`] = cb;
+                }),
+            };
+
+            return this.sockets[key];
+        });
 
         const bot = createBot({
             name: 'test',
@@ -120,13 +127,9 @@ describe('index test', () => {
 
         await flushPromises();
 
-        const newItemCb = CSGOEmpireMock.tradingSocket.on.mock.calls[1][1];
+        await listeners['trading:new_item'](newItemEvent);
 
-        newItemCb(newItemEvent);
-
-        expect(CSGOEmpireMock.makeWithdrawal).toHaveBeenCalledWith(
-            newItemEvent.id,
-        );
+        expect(makeWithdrawalSpy).toHaveBeenCalledWith(newItemEvent.id);
 
         await flushPromises();
 
@@ -234,11 +237,80 @@ describe('index test', () => {
 
         await flushPromises();
         await flushPromises();
+        await flushPromises();
 
         expect(depositMock).toHaveBeenCalledWith({
             asset_id: 'test',
             price: 6845,
             type: 'auction',
+        });
+    });
+
+    it('makes deposit to csgoempire correctly', async () => {
+        const depositMock = vi.fn();
+
+        mswServer.use(
+            rest.post(
+                'https://csgoempire.com/api/v2/trading/deposit',
+                async (req, res, ctx) => {
+                    depositMock(await req.json());
+
+                    return res(
+                        ctx.json({
+                            success: true,
+                        }),
+                    );
+                },
+            ),
+            mswUserInventory,
+        );
+
+        vi.useFakeTimers();
+
+        // Start from previous test
+        vi.spyOn(fs, 'readFile').mockResolvedValue(
+            JSON.stringify([
+                {
+                    marketplaceData: {
+                        type: 'auction',
+                    },
+                    marketplace: 'csgoempire',
+                    withdrawMarketplace: 'csgoempire',
+                    amountUsd: 68.45,
+                    assetId: 'test',
+                    // 8 days ago
+                    withdrawnAt: new Date(
+                        Date.now() - 8 * 24 * 60 * 60 * 1000,
+                    ).toISOString(),
+                },
+            ]),
+        );
+
+        const bot = createBot({
+            name: 'test',
+            pipeline: createPipeline('test', vi.fn()),
+            plugins: [
+                createCSGOEmpirePlugin({
+                    apiKey: 'test',
+                }),
+            ],
+        });
+
+        startBots([bot]);
+
+        vi.runOnlyPendingTimers();
+
+        vi.useRealTimers();
+
+        await flushPromises();
+
+        expect(depositMock).toHaveBeenCalledWith({
+            items: [
+                {
+                    coin_value: 11143,
+                    id: 1,
+                },
+            ],
         });
     });
 

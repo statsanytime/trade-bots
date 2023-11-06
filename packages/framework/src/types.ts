@@ -32,11 +32,6 @@ export interface PipelineContext {
     withdrawnAt?: Dayjs;
 }
 
-export interface PipelineListenHook {
-    event: string;
-    handler: (event: any) => void | Promise<void>;
-}
-
 export interface ScheduleDepositOptions {
     marketplace: string;
     withdrawMarketplace: string;

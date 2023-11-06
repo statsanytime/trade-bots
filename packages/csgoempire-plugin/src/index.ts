@@ -4,11 +4,14 @@ import {
     useContext,
     scheduleDeposit as frameworkScheduleDeposit,
     type Plugin,
-    type PipelineListenHook,
     getScheduledDeposits,
     depositIsTradable,
     handleError,
     SilentError,
+    ScheduledDeposit,
+    PipelineContext,
+    Bot,
+    triggerEvent,
 } from '@statsanytime/trade-bots';
 import Big from 'big.js';
 import consola from 'consola';
@@ -19,6 +22,7 @@ import {
     CSGOEmpireScheduleDepositOptions,
 } from './types.js';
 import dayjs from 'dayjs';
+import chunk from 'lodash/chunk';
 
 const USD_TO_COINS_RATE = 1.62792;
 
@@ -26,6 +30,10 @@ const MARKETPLACE = 'csgoempire';
 
 function coinsToUsd(coins: number) {
     return coins / USD_TO_COINS_RATE;
+}
+
+function usdToCoins(usd: number) {
+    return usd * USD_TO_COINS_RATE;
 }
 
 class CSGOEmpirePlugin implements Plugin {
@@ -51,24 +59,23 @@ class CSGOEmpirePlugin implements Plugin {
             this.account!.tradingSocket.emit('filters', {});
         });
 
-        context.bot.hooks.hook(
-            'pipeline:listen',
-            ({ event, handler }: PipelineListenHook) => {
-                const listeners = {
-                    'csgoempire:item-buyable': () =>
-                        this.listenForItemBuyable({ handler }),
-                } as Record<string, () => void>;
+        context.bot.hooks.hook('pipeline:listen', (event: string) => {
+            const listeners = {
+                'csgoempire:item-buyable': () => this.listenForItemBuyable(),
+            } as Record<string, () => void>;
 
-                if (event in listeners) {
-                    listeners[event]();
-                }
-            },
+            if (event in listeners) {
+                listeners[event]();
+            }
+        });
+
+        setInterval(
+            () => this.checkScheduledDeposits(context.bot),
+            1000 * 60 * 5,
         );
-
-        setInterval(this.checkScheduledDeposits.bind(this), 1000 * 60 * 5);
     }
 
-    listenForItemBuyable({ handler }: Omit<PipelineListenHook, 'event'>) {
+    listenForItemBuyable() {
         const context = getContext();
         const contextData = context.use();
 
@@ -90,7 +97,7 @@ class CSGOEmpirePlugin implements Plugin {
 
                 context.call(newContext, async () => {
                     try {
-                        await handler(item);
+                        await triggerEvent('csgoempire:item-buyable', item);
                     } catch (err) {
                         handleError(err);
                     }
@@ -99,7 +106,7 @@ class CSGOEmpirePlugin implements Plugin {
         );
     }
 
-    async checkScheduledDeposits() {
+    async checkScheduledDeposits(bot: Bot) {
         const deposits = await getScheduledDeposits({
             marketplace: MARKETPLACE,
         });
@@ -108,15 +115,72 @@ class CSGOEmpirePlugin implements Plugin {
             depositIsTradable(dayjs(deposit.withdrawnAt!)),
         );
 
-        for (const deposit of toDeposit) {
-            try {
-                // TODO: IMPLEMENT
-            } catch (err) {
-                consola.error(err);
-                consola.error('Failed to deposit item', deposit);
+        // Create a new context for the deposit
+        const context = getContext();
+
+        const contextData: PipelineContext = { bot };
+
+        context.call(contextData, async () => {
+            await depositMultiple(toDeposit);
+        });
+    }
+}
+
+function depositChunk(
+    marketplaceInventory: Awaited<ReturnType<CSGOEmpire['getInventory']>>,
+    deposits: ScheduledDeposit[],
+) {
+    const context = useContext();
+
+    const plugin = context.bot.plugins['csgoempire'] as CSGOEmpirePlugin;
+
+    const depositItems = deposits
+        .map((deposit) => {
+            const inventoryItem = marketplaceInventory.items.find(
+                (item) => item.asset_id?.toString() === deposit.assetId,
+            );
+
+            if (!inventoryItem) {
+                consola.error(
+                    `Failed to find item ${deposit.assetId} in CSGOEmpire inventory`,
+                );
+                return undefined;
             }
+
+            const amountCoins = new Big(usdToCoins(deposit.amountUsd));
+
+            inventoryItem.deposit_value = amountCoins.round(2).toNumber();
+
+            return inventoryItem;
+        })
+        .filter(Boolean) as Awaited<
+        ReturnType<CSGOEmpire['getInventory']>
+    >['items'];
+
+    return plugin.account!.makeDeposits(depositItems);
+}
+
+export async function depositMultiple(deposits: ScheduledDeposit[]) {
+    const context = useContext();
+
+    const plugin = context.bot.plugins['csgoempire'] as CSGOEmpirePlugin;
+
+    const depositChunks = chunk(deposits, 20);
+
+    const marketplaceInventory = await plugin.account!.getInventory(false);
+
+    for (const chunk of depositChunks) {
+        try {
+            await depositChunk(marketplaceInventory, chunk);
+        } catch (err) {
+            console.error(err);
+            consola.error('Failed to deposit item chunk', chunk);
         }
     }
+}
+
+export function deposit(deposit: ScheduledDeposit) {
+    return depositMultiple([deposit]);
 }
 
 export async function scheduleDeposit(

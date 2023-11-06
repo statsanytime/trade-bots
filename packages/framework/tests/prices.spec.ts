@@ -26,7 +26,7 @@ import { newItemEvent } from './mocks/csgoempire.js';
 const mswServer = setupServer();
 
 describe('index test', () => {
-    let CSGOEmpireMock;
+    let CSGOEmpireMock: any;
 
     beforeEach(() => {
         CSGOEmpireMock = {
