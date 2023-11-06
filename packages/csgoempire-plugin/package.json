@@ -16,7 +16,8 @@
         "dist"
     ],
     "scripts": {
-        "build": "unbuild"
+        "build": "unbuild",
+        "build-stub": "unbuild --stub"
     },
     "author": "Pixel",
     "license": "MIT",

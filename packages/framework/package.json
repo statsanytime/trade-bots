@@ -21,6 +21,7 @@
     ],
     "scripts": {
         "build": "unbuild",
+        "build-stub": "unbuild --stub",
         "stattb": "node dist/stattb.mjs",
         "test": "vitest"
     },
