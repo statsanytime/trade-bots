@@ -104,6 +104,8 @@ class CSGOEmpirePlugin implements Plugin {
                 });
             },
         );
+
+        // TODO: Also listen for auction_update
     }
 
     async checkScheduledDeposits(bot: Bot) {
