@@ -1,6 +1,6 @@
 {
     "name": "@statsanytime/trade-bots-csgoempire",
-    "version": "1.0.0-alpha.1",
+    "version": "1.0.0-alpha.2",
     "type": "module",
     "exports": {
         ".": {
@@ -23,7 +23,7 @@
     "author": "Pixel",
     "license": "MIT",
     "dependencies": {
-        "@statsanytime/trade-bots": "^1.0.0-alpha.1",
+        "@statsanytime/trade-bots": "^1.0.0-alpha.2",
         "csgoempire-wrapper": "^0.1.19",
         "dayjs": "^1.11.10",
         "lodash": "^4.17.21"
