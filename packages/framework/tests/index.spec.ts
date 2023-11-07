@@ -1,180 +1,51 @@
-import {
-    afterAll,
-    afterEach,
-    beforeAll,
-    beforeEach,
-    describe,
-    expect,
-    test,
-    vi,
-} from 'vitest';
-import { setupServer } from 'msw/node';
-import {
-    createCSGOEmpirePlugin,
-    withdraw,
-} from '@statsanytime/trade-bots-csgoempire';
-import { createPipeline, startBots, createBot, listen } from '../src/index.js';
-import {
-    flushPromises,
-    mockSteamUser,
-    mockSteamSession,
-    mockCSGOEmpire,
-} from './utils.js';
-import { newItemEvent } from './mocks/csgoempire.js';
+import { describe, expect, test, vi } from 'vitest';
+import { depositIsTradable } from '@statsanytime/trade-bots';
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
 
-const mswServer = setupServer();
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
-describe('index test', () => {
-    let CSGOEmpireMock: any;
+describe('Framework', () => {
+    test('depositIsTradable works', () => {
+        vi.setSystemTime(dayjs.tz('2021-11-20 12:00', 'PST').toISOString());
 
-    beforeEach(() => {
-        CSGOEmpireMock = mockCSGOEmpire();
-        mockSteamUser();
-        mockSteamSession();
-    });
+        expect(
+            depositIsTradable(dayjs.tz('2021-11-12 12:00', 'PST')),
+        ).toBeTruthy();
+        expect(
+            depositIsTradable(dayjs.tz('2021-11-13 12:00', 'PST')),
+        ).toBeFalsy();
+        expect(
+            depositIsTradable(dayjs.tz('2021-11-12 23:59', 'PST')),
+        ).toBeTruthy();
+        expect(
+            depositIsTradable(dayjs.tz('2021-11-13 00:01', 'PST')),
+        ).toBeFalsy();
 
-    beforeAll(() => mswServer.listen());
+        vi.setSystemTime(dayjs.tz('2021-11-20 00:00', 'PST').toISOString());
 
-    afterEach(() => {
-        vi.resetAllMocks();
-        mswServer.resetHandlers();
-    });
+        expect(
+            depositIsTradable(dayjs.tz('2021-11-12 23:59', 'PST')),
+        ).toBeTruthy();
+        expect(
+            depositIsTradable(dayjs.tz('2021-11-13 00:01', 'PST')),
+        ).toBeFalsy();
 
-    afterAll(() => mswServer.close());
+        vi.setSystemTime(dayjs.tz('2021-11-20 09:00', 'CET').toISOString());
 
-    test('listening for events works', async () => {
-        const listenFn = vi.fn();
-
-        const bot = createBot({
-            name: 'test',
-            pipeline: createPipeline('test', function () {
-                listen('csgoempire:item-buyable', listenFn);
-            }),
-            plugins: [
-                createCSGOEmpirePlugin({
-                    apiKey: 'testApiKey',
-                }),
-            ],
-        });
-
-        startBots([bot]);
-
-        await flushPromises();
-
-        expect(CSGOEmpireMock.sockets.trading.on).toHaveBeenCalledWith(
-            'new_item',
-            expect.any(Function),
-        );
-
-        await CSGOEmpireMock.listeners['trading:new_item'](newItemEvent);
-
-        expect(listenFn).toHaveBeenCalledWith(
-            expect.objectContaining({
-                marketId: newItemEvent.id,
-                marketName: newItemEvent.market_name,
-            }),
-        );
-    });
-
-    test('withdraw works', async () => {
-        const bot = createBot({
-            name: 'test',
-            pipeline: createPipeline('test', function () {
-                listen('csgoempire:item-buyable', function () {
-                    withdraw();
-                });
-            }),
-            plugins: [
-                createCSGOEmpirePlugin({
-                    apiKey: 'testApiKey',
-                }),
-            ],
-        });
-
-        startBots([bot]);
-
-        await flushPromises();
-
-        expect(CSGOEmpireMock.sockets.trading.on).toHaveBeenCalledWith(
-            'new_item',
-            expect.any(Function),
-        );
-
-        await CSGOEmpireMock.listeners['trading:new_item'](newItemEvent);
-
-        expect(CSGOEmpireMock.makeWithdrawalSpy).toHaveBeenCalledWith(
-            newItemEvent.id,
-        );
-    });
-
-    test('after withdraw works', async () => {
-        const afterWithdrawFn = vi.fn();
-
-        const bot = createBot({
-            name: 'test',
-            pipeline: createPipeline('test', function () {
-                listen('csgoempire:item-buyable', async function () {
-                    await withdraw();
-
-                    afterWithdrawFn();
-                });
-            }),
-            plugins: [
-                createCSGOEmpirePlugin({
-                    apiKey: 'testApiKey',
-                }),
-            ],
-        });
-
-        startBots([bot]);
-
-        await flushPromises();
-
-        expect(CSGOEmpireMock.sockets.trading.on).toHaveBeenCalledWith(
-            'new_item',
-            expect.any(Function),
-        );
-
-        await CSGOEmpireMock.listeners['trading:new_item'](newItemEvent);
-
-        expect(CSGOEmpireMock.makeWithdrawalSpy).toHaveBeenCalledWith(
-            newItemEvent.id,
-        );
-
-        expect(afterWithdrawFn).not.toHaveBeenCalled();
-
-        await flushPromises();
-
-        expect(afterWithdrawFn).toHaveBeenCalled();
-    });
-
-    test('no exception is thrown on failed withdrawal', async () => {
-        CSGOEmpireMock.makeWithdrawalSpy.mockRejectedValueOnce(
-            new Error('test error'),
-        );
-
-        const bot = createBot({
-            name: 'test',
-            pipeline: createPipeline('test', function () {
-                listen('csgoempire:item-buyable', async function () {
-                    await withdraw();
-                });
-            }),
-            plugins: [
-                createCSGOEmpirePlugin({
-                    apiKey: 'testApiKey',
-                }),
-            ],
-        });
-
-        startBots([bot]);
-
-        await flushPromises();
-
-        await CSGOEmpireMock.listeners['trading:new_item'](newItemEvent);
-
-        expect(CSGOEmpireMock.makeWithdrawalSpy).toHaveBeenCalledWith(
-            newItemEvent.id,
-        );
+        expect(
+            depositIsTradable(dayjs.tz('2021-11-12 08:59', 'CET')),
+        ).toBeTruthy();
+        expect(
+            depositIsTradable(dayjs.tz('2021-11-12 09:01', 'CET')),
+        ).toBeTruthy();
+        expect(
+            depositIsTradable(dayjs.tz('2021-11-13 08:59', 'CET')),
+        ).toBeTruthy();
+        expect(
+            depositIsTradable(dayjs.tz('2021-11-13 09:01', 'CET')),
+        ).toBeFalsy();
     });
 });

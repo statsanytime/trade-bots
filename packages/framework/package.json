@@ -42,15 +42,10 @@
         "unstorage": "^1.9.0"
     },
     "devDependencies": {
-        "@statsanytime/trade-bots-csgoempire": "^1.0.0-alpha.1",
-        "@statsanytime/trade-bots-csgofloat": "^1.0.0-alpha.1",
-        "@statsanytime/trade-bots-pricempire": "^1.0.0-alpha.1",
-        "@statsanytime/trade-bots-steam": "^1.0.0-alpha.1",
         "@types/big.js": "^6.2.1",
         "@types/node": "^20.6.2",
-        "csgoempire-wrapper": "^0.1.19",
         "msw": "^1.3.1",
         "unbuild": "^2.0.0",
-        "vitest": "^0.34.5"
+        "vitest": "^0.34.6"
     }
 }

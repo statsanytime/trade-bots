@@ -1,7 +1,7 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import consola from 'consola';
 import { createHooks, Hookable } from 'hookable';
-import { getContext as unGetContext, UseContext } from 'unctx';
+import { getContext as unGetContext } from 'unctx';
 import dayjs, { Dayjs } from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';

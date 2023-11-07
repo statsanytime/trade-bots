@@ -17,7 +17,8 @@
     ],
     "scripts": {
         "build": "unbuild",
-        "build-stub": "unbuild --stub"
+        "build-stub": "unbuild --stub",
+        "test": "vitest"
     },
     "author": "Pixel",
     "license": "MIT",

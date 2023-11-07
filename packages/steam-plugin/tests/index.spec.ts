@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { createSteamPlugin } from '@statsanytime/trade-bots-steam';
-import { createPipeline, startBots, createBot } from '../src/index.js';
+import { createPipeline, startBots, createBot } from '@statsanytime/trade-bots';
 import {
     flushPromises,
     mockSteamSession,
@@ -8,7 +8,7 @@ import {
     mockSteamUser,
 } from './utils.js';
 
-describe('steam test', () => {
+describe('Steam Plugin', () => {
     let TradeOfferMock: any;
 
     beforeEach(() => {
