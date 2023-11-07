@@ -45,3 +45,11 @@ export const bot1 = createBot({
 # Structure
 
 The main logic is kept in the `@statsanytime/trade-bots` package which is available in the `packages/framework` folder in this repository.
+
+Aside from this, there are some official plugins available for integration with other services. These are available in the `packages` folder in this repository. For now, we have the following plugins available:
+
+-  `@statsanytime/trade-bots-csgoempire` - CSGOEmpire plugin
+-  `@statsanytime/trade-bots-csgofloat` - CSGOFloat plugin
+-  `@statsanytime/trade-bots-steam` - Steam plugin
+-  `@statsanytime/trade-bots-pricempire` - Pricempire plugin
+-  `@statsanytime/trade-bots-csgo500` - CSGO500 plugin
