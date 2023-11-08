@@ -1,7 +1,7 @@
 {
     "name": "@statsanytime/trade-bots",
     "description": "Simple framework for building CS trade-bots!",
-    "version": "1.0.0-alpha.0",
+    "version": "1.0.0-alpha.5",
     "type": "module",
     "exports": {
         ".": {
@@ -47,5 +47,6 @@
         "msw": "^1.3.1",
         "unbuild": "^2.0.0",
         "vitest": "^0.34.6"
-    }
+    },
+    "gitHead": "a25a8f5403132fbc86b14cc5cfac9a25da8fdd4c"
 }

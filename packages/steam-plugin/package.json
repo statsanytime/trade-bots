@@ -1,6 +1,6 @@
 {
     "name": "@statsanytime/trade-bots-steam",
-    "version": "1.0.0-alpha.0",
+    "version": "1.0.0-alpha.5",
     "type": "module",
     "exports": {
         ".": {
@@ -23,7 +23,7 @@
     "author": "Pixel",
     "license": "MIT",
     "dependencies": {
-        "@statsanytime/trade-bots": "workspace:*",
+        "@statsanytime/trade-bots": "1.0.0-alpha.5",
         "consola": "^3.2.3",
         "steam-session": "^1.4.1",
         "steam-totp": "^2.1.2",
@@ -35,5 +35,6 @@
         "@types/node": "^20.6.2",
         "unbuild": "^2.0.0",
         "vitest": "^0.34.5"
-    }
+    },
+    "gitHead": "a25a8f5403132fbc86b14cc5cfac9a25da8fdd4c"
 }
