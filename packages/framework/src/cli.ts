@@ -26,7 +26,9 @@ const main = defineCommand({
 
         await startBots(
             Object.entries(bots).map(([name, bot]) => {
-                bot.name = name;
+                if (bot.name === undefined) {
+                    bot.name = name;
+                }
 
                 return bot;
             }),
