@@ -48,5 +48,8 @@
         "unbuild": "^2.0.0",
         "vitest": "^0.34.6"
     },
-    "gitHead": "a25a8f5403132fbc86b14cc5cfac9a25da8fdd4c"
+    "gitHead": "a25a8f5403132fbc86b14cc5cfac9a25da8fdd4c",
+    "publishConfig": {
+        "access": "public"
+    }
 }
