@@ -19,7 +19,7 @@ import {
     listen,
     Item,
     getContext,
-    triggerEvent,
+    callContextHook,
 } from '@statsanytime/trade-bots';
 import { flushPromises } from './utils.js';
 import { mswItemPrices } from './mocks.js';
@@ -78,7 +78,7 @@ describe('Pricempire Plugin', () => {
                 marketplace: 'csgoempire',
             },
             async () => {
-                await triggerEvent('random-event', item);
+                await callContextHook('random-event', item);
             },
         );
 

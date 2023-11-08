@@ -34,18 +34,13 @@ export function listen(
     const context = useContext();
 
     context.bot.hooks.callHook('pipeline:listen', event);
-
-    if (!context.bot.eventHandlers[event]) {
-        context.bot.eventHandlers[event] = [];
-    }
-
-    context.bot.eventHandlers[event].push(handler);
+    context.bot.hooks.hook(event, handler);
 }
 
-export async function triggerEvent(event: string, data: any) {
+export async function callContextHook(event: string, data: any) {
     const context = useContext();
 
-    return context.bot.triggerEvent(event, data);
+    return context.bot.hooks.callHook(event, data);
 }
 
 export function scheduleDeposit(options: ScheduleDepositOptions) {
@@ -118,7 +113,6 @@ export class Bot {
     pipeline: Pipeline;
     plugins: Record<string, Plugin>;
     hooks: Hookable;
-    eventHandlers: Record<string, ((event: any) => void | Promise<void>)[]>;
 
     constructor(options: BotOptions) {
         this.name = options.name;
@@ -134,7 +128,6 @@ export class Bot {
         );
 
         this.hooks = createHooks();
-        this.eventHandlers = {};
     }
 
     bootPlugins(): Promise<void[]> {
@@ -142,16 +135,6 @@ export class Bot {
             Object.values(this.plugins)
                 .map((plugin) => plugin.boot?.())
                 .filter(Boolean),
-        );
-    }
-
-    triggerEvent(event: string, data: any) {
-        if (!this.eventHandlers[event]) {
-            return;
-        }
-
-        return Promise.all(
-            this.eventHandlers[event].map((handler) => handler(data)),
         );
     }
 }

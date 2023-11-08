@@ -4,8 +4,8 @@ import {
     SilentError,
     getContext,
     handleError,
-    triggerEvent,
     useContext,
+    callContextHook,
 } from '@statsanytime/trade-bots';
 import { createFetch } from 'ofetch';
 import io, { Socket } from 'socket.io-client';
@@ -92,7 +92,7 @@ class CSGO500Plugin implements Plugin {
 
                 context.call(newContext, async () => {
                     try {
-                        await triggerEvent('csgo500:item-buyable', item);
+                        await callContextHook('csgo500:item-buyable', item);
                     } catch (err) {
                         handleError(err);
                     }

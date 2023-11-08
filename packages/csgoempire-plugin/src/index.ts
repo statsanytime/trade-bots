@@ -11,7 +11,7 @@ import {
     ScheduledDeposit,
     PipelineContext,
     Bot,
-    triggerEvent,
+    callContextHook,
 } from '@statsanytime/trade-bots';
 import Big from 'big.js';
 import consola from 'consola';
@@ -97,7 +97,7 @@ class CSGOEmpirePlugin implements Plugin {
 
                 context.call(newContext, async () => {
                     try {
-                        await triggerEvent('csgoempire:item-buyable', item);
+                        await callContextHook('csgoempire:item-buyable', item);
                     } catch (err) {
                         handleError(err);
                     }

@@ -22,7 +22,7 @@ import {
     listen,
     getContext,
     Item,
-    triggerEvent,
+    callContextHook,
 } from '@statsanytime/trade-bots';
 import { flushPromises } from './utils.js';
 import dayjs from 'dayjs';
@@ -83,7 +83,7 @@ describe('deposit test', () => {
                 marketplace: 'csgoempire',
             },
             async () => {
-                await triggerEvent('withdraw-event', item);
+                await callContextHook('withdraw-event', item);
             },
         );
 
