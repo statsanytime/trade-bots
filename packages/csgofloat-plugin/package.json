@@ -23,7 +23,7 @@
     "author": "Pixel",
     "license": "MIT",
     "dependencies": {
-        "@statsanytime/trade-bots": "^1.0.0-alpha.2",
+        "@statsanytime/trade-bots": "workspace:*",
         "dayjs": "^1.11.10",
         "lodash": "^4.17.21",
         "ofetch": "^1.3.3"

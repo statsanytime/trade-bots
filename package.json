@@ -13,5 +13,6 @@
         "lerna": "^7.4.2",
         "prettier": "^3.0.3",
         "vitest": "^0.34.6"
-    }
+    },
+    "npmClient": "pnpm"
 }
