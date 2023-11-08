@@ -5,22 +5,29 @@ on:
 jobs:
     build:
         runs-on: ubuntu-latest
+        env:
+            NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         steps:
             - name: Checkout frontend 🛎
               uses: actions/checkout@master
+
             - name: Setup node env 🏗
               uses: actions/setup-node@v3
               with:
+                  registry-url: 'https://registry.npmjs.org'
                   node-version: 20.9.0
                   check-latest: true
+
             - name: pnpm-setup
               uses: pnpm/action-setup@v2
               with:
                   version: 8
+
             - name: Install dependencies 👨🏻‍💻
               run: pnpm install
+
             - name: Build
               run: pnpm run --filter './packages/*' build
-            - run: pnpm exec lerna publish from-package --yes
-              env:
-                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+            - name: Publish
+              run: pnpm exec lerna publish from-package --yes
