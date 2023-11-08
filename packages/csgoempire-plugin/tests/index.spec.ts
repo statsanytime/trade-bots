@@ -12,10 +12,7 @@ import {
 } from 'vitest';
 import { setupServer } from 'msw/node';
 import { rest } from 'msw';
-import {
-    createCSGOEmpirePlugin,
-    withdraw,
-} from '@statsanytime/trade-bots-csgoempire';
+import { createCSGOEmpirePlugin, withdraw } from '../src/index.js';
 import {
     createPipeline,
     startBots,

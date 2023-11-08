@@ -8,10 +8,7 @@ import {
     vi,
 } from 'vitest';
 import { setupServer } from 'msw/node';
-import {
-    createPricempirePlugin,
-    getPrice,
-} from '@statsanytime/trade-bots-pricempire';
+import { createPricempirePlugin, getPrice } from '../src/index.js';
 import {
     createPipeline,
     startBots,

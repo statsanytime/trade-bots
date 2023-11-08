@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
-import { depositIsTradable } from '@statsanytime/trade-bots';
+import { depositIsTradable } from '../src/index.js';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc.js';
 import timezone from 'dayjs/plugin/timezone.js';

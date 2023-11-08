@@ -11,10 +11,7 @@ import {
 } from 'vitest';
 import { setupServer } from 'msw/node';
 import { rest } from 'msw';
-import {
-    createCSGOFloatPlugin,
-    scheduleDeposit,
-} from '@statsanytime/trade-bots-csgofloat';
+import { createCSGOFloatPlugin, scheduleDeposit } from '../src/index.js';
 import {
     createPipeline,
     startBots,
