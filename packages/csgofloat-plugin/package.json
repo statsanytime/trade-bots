@@ -1,6 +1,6 @@
 {
     "name": "@statsanytime/trade-bots-csgofloat",
-    "version": "1.0.0-alpha.10",
+    "version": "1.0.0-alpha.11",
     "type": "module",
     "exports": {
         ".": {
@@ -23,7 +23,7 @@
     "author": "Pixel",
     "license": "MIT",
     "dependencies": {
-        "@statsanytime/trade-bots": "^1.0.0-alpha.10",
+        "@statsanytime/trade-bots": "^1.0.0-alpha.11",
         "big.js": "^6.2.1",
         "consola": "^3.2.3",
         "dayjs": "^1.11.10",
