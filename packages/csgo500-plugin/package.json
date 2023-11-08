@@ -1,6 +1,6 @@
 {
     "name": "@statsanytime/trade-bots-csgo500",
-    "version": "1.0.0-alpha.8",
+    "version": "1.0.0-alpha.9",
     "type": "module",
     "exports": {
         ".": {
@@ -23,7 +23,7 @@
     "author": "Pixel",
     "license": "MIT",
     "dependencies": {
-        "@statsanytime/trade-bots": "^1.0.0-alpha.8",
+        "@statsanytime/trade-bots": "^1.0.0-alpha.9",
         "consola": "^3.2.3",
         "dayjs": "^1.11.10",
         "jsonwebtoken": "^9.0.2",
