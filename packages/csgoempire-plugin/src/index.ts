@@ -81,26 +81,33 @@ class CSGOEmpirePlugin implements Plugin {
 
         this.account!.tradingSocket.on(
             'new_item',
-            (event: CSGOEmpireNewItemEvent) => {
-                const item = new Item({
-                    marketId: event.id,
-                    marketName: event.market_name,
-                    priceUsd: coinsToUsd(event.market_value / 100),
-                });
+            (events: CSGOEmpireNewItemEvent | CSGOEmpireNewItemEvent[]) => {
+                const eventList = Array.isArray(events) ? events : [events];
 
-                const newContext = {
-                    ...contextData,
-                    item,
-                    event,
-                    marketplace: MARKETPLACE,
-                };
+                eventList.forEach((event) => {
+                    const item = new Item({
+                        marketId: event.id,
+                        marketName: event.market_name,
+                        priceUsd: coinsToUsd(event.market_value / 100),
+                    });
 
-                context.call(newContext, async () => {
-                    try {
-                        await callContextHook('csgoempire:item-buyable', item);
-                    } catch (err) {
-                        handleError(err);
-                    }
+                    const newContext = {
+                        ...contextData,
+                        item,
+                        event,
+                        marketplace: MARKETPLACE,
+                    };
+
+                    context.call(newContext, async () => {
+                        try {
+                            await callContextHook(
+                                'csgoempire:item-buyable',
+                                item,
+                            );
+                        } catch (err) {
+                            handleError(err);
+                        }
+                    });
                 });
             },
         );

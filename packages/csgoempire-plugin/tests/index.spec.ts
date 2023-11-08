@@ -72,6 +72,17 @@ describe('CSGOEmpire Plugin', () => {
                 marketName: newItemEvent.market_name,
             }),
         );
+
+        listenFn.mockClear();
+
+        await CSGOEmpireMock.listeners['trading:new_item']([newItemEvent]);
+
+        expect(listenFn).toHaveBeenCalledWith(
+            expect.objectContaining({
+                marketId: newItemEvent.id,
+                marketName: newItemEvent.market_name,
+            }),
+        );
     });
 
     test('withdraw works', async () => {
