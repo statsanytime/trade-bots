@@ -33,7 +33,7 @@ jobs:
               run: pnpm install
 
             - name: Build
-              run: pnpm run --filter ./packages/* build
+              run: pnpm run --filter './packages/*' build
 
             - name: Execute tests
               run: pnpm run test
