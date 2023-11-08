@@ -22,7 +22,7 @@ import {
     CSGOEmpireScheduleDepositOptions,
 } from './types.js';
 import dayjs from 'dayjs';
-import chunk from 'lodash/chunk';
+import chunk from 'lodash/chunk.js';
 
 const USD_TO_COINS_RATE = 1.62792;
 

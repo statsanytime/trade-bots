@@ -1,6 +1,6 @@
 import { useContext, type Plugin } from '@statsanytime/trade-bots';
 import consola from 'consola';
-import get from 'lodash/get';
+import get from 'lodash/get.js';
 import { createFetch } from 'ofetch';
 import { PricempirePluginOptions } from './types.js';
 

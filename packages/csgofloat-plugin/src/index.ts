@@ -13,7 +13,7 @@ import Big from 'big.js';
 import { createFetch } from 'ofetch';
 import dayjs from 'dayjs';
 import consola from 'consola';
-import pickBy from 'lodash/pickBy';
+import pickBy from 'lodash/pickBy.js';
 import {
     CSGOFloatPluginOptions,
     CSGOFloatScheduleDepositOptions,
