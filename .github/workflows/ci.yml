@@ -26,6 +26,8 @@ jobs:
 
             - name: pnpm-setup
               uses: pnpm/action-setup@v2
+              with:
+                version: 8
 
             - name: Install dependencies 👨🏻‍💻
               run: pnpm ci --prefer-offline --no-audit --no-optional
