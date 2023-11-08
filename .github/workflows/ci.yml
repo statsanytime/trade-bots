@@ -30,31 +30,13 @@ jobs:
                 version: 8
 
             - name: Install dependencies 👨🏻‍💻
-              run: pnpm ci --prefer-offline --no-audit --no-optional
+              run: pnpm ci
 
-            - name: Build framework
-              run: pnpm run build
-              working-directory: ./packages/framework
-
-            - name: Build CSGOEmpire plugin
-              run: pnpm run build
-              working-directory: ./packages/csgoempire-plugin
-
-            - name: Build CSGOFloat plugin
-              run: pnpm run build
-              working-directory: ./packages/csgofloat-plugin
-
-            - name: Build Pricempire plugin
-              run: pnpm run build
-              working-directory: ./packages/pricempire-plugin
-
-            - name: Build Steam plugin
-              run: pnpm run build
-              working-directory: ./packages/steam-plugin
+            - name: Build
+              run: pnpm run --filter ./packages/* build
 
             - name: Execute tests
               run: pnpm run test
-              working-directory: ./packages/framework
 
             - name: Check prettier
               run: pnpm run prettier-check
