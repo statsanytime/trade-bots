@@ -23,7 +23,9 @@ jobs:
               with:
                   node-version: 20.9.0
                   check-latest: true
-                  cache: "pnpm"
+
+            - name: pnpm-setup
+              uses: pnpm/action-setup@v2
 
             - name: Install dependencies 👨🏻‍💻
               run: pnpm ci --prefer-offline --no-audit --no-optional
