@@ -50,6 +50,8 @@ class CSGO500Plugin implements Plugin {
         const context = useContext();
 
         this.socket = io('wss://tradingapi.500.casino', {
+            transports: ['websocket'],
+            secure: true,
             auth: {
                 'x-500-auth': this.authToken,
             },

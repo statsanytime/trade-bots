@@ -68,6 +68,8 @@ describe('CSGOEmpire Plugin', () => {
         await flushPromises();
 
         expect(io).toHaveBeenCalledWith('wss://tradingapi.500.casino', {
+            transports: ['websocket'],
+            secure: true,
             auth: {
                 'x-500-auth': expect.any(String),
             },
