@@ -6,6 +6,14 @@ Simple framework for building CS:GO trade-bots!
 
 We are currently in alpha so there is no official installation path for now. Feel free to manually install and play around with the packages, though.
 
+## Official Plugins
+
+-   `@statsanytime/trade-bots-csgoempire` - [CSGOEmpire plugin](packages/csgoempire-plugin)
+-   `@statsanytime/trade-bots-csgofloat` - [CSGOFloat plugin](packages/csgofloat-plugin)
+-   `@statsanytime/trade-bots-steam` - [Steam plugin](packages/steam-plugin)
+-   `@statsanytime/trade-bots-pricempire` - [Pricempire plugin](packages/pricempire-plugin)
+-   `@statsanytime/trade-bots-csgo500` - [CSGO500 plugin](packages/csgo500-plugin)
+
 # Motivation
 
 Trade bots should be simple. It should be possible to write code like this.
@@ -46,10 +54,4 @@ export const bot1 = createBot({
 
 The main logic is kept in the `@statsanytime/trade-bots` package which is available in the `packages/framework` folder in this repository.
 
-Aside from this, there are some official plugins available for integration with other services. These are available in the `packages` folder in this repository. For now, we have the following plugins available:
-
--   `@statsanytime/trade-bots-csgoempire` - CSGOEmpire plugin
--   `@statsanytime/trade-bots-csgofloat` - CSGOFloat plugin
--   `@statsanytime/trade-bots-steam` - Steam plugin
--   `@statsanytime/trade-bots-pricempire` - Pricempire plugin
--   `@statsanytime/trade-bots-csgo500` - CSGO500 plugin
+Aside from this, there are some official plugins available for integration with other services. These are available in the `packages` folder in this repository.
