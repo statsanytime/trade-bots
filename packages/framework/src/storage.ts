@@ -3,7 +3,7 @@ import fsDriver from 'unstorage/drivers/fs';
 
 export const storage = createStorage({
     driver: fsDriver({
-        base: './tmp',
+        base: './.statsanytime',
     }),
 });
 

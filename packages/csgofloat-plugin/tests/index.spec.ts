@@ -96,7 +96,7 @@ describe('deposit test', () => {
         ).toBeTruthy();
 
         expect(writeFileSpy).toHaveBeenCalledWith(
-            resolve(cwd(), './tmp/scheduled-deposits'),
+            resolve(cwd(), './.statsanytime/scheduled-deposits'),
             JSON.stringify([
                 {
                     marketplaceData: {

@@ -26,6 +26,7 @@
         "@statsanytime/trade-bots": "^1.0.0-alpha.11",
         "big.js": "^6.2.1",
         "consola": "^3.2.3",
+        "dayjs": "^1.11.10",
         "lodash": "^4.17.21",
         "ofetch": "^1.3.3"
     },

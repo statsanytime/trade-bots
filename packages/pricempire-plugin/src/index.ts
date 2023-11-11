@@ -1,8 +1,14 @@
-import { useContext, type Plugin, SilentError } from '@statsanytime/trade-bots';
+import {
+    useContext,
+    type Plugin,
+    SilentError,
+    storage,
+} from '@statsanytime/trade-bots';
 import consola from 'consola';
 import Big from 'big.js';
 import get from 'lodash/get.js';
 import { createFetch } from 'ofetch';
+import dayjs from 'dayjs';
 import { PricempirePluginOptions } from './types.js';
 
 class PricempirePlugin implements Plugin {
@@ -26,6 +32,29 @@ class PricempirePlugin implements Plugin {
     }
 
     async boot() {
+        // Automatically fetch prices once an hour
+        setInterval(
+            () => {
+                this.fetchPrices();
+            },
+            1000 * 60 * 60,
+        );
+
+        if (await storage.hasItem('pricempire-prices')) {
+            const storedData = (await storage.getItem('pricempire-prices')) as {
+                prices: Record<string, unknown>;
+                cachedAt: number;
+            };
+
+            // Only use cache for 1 hour
+            if (
+                dayjs(storedData.cachedAt).isAfter(dayjs().subtract(1, 'hour'))
+            ) {
+                this.prices = storedData.prices;
+                return;
+            }
+        }
+
         await this.fetchPrices();
     }
 
@@ -40,6 +69,11 @@ class PricempirePlugin implements Plugin {
                     },
                 },
             );
+
+            await storage.setItem('pricempire-prices', {
+                prices: this.prices,
+                cachedAt: Date.now(),
+            });
         } catch (e) {
             consola.log(e);
             consola.error('Failed to fetch prices from Pricempire', e);
