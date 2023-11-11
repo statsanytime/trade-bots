@@ -8,7 +8,7 @@ import {
     callContextHook,
 } from '@statsanytime/trade-bots';
 import { createFetch } from 'ofetch';
-import io, { Socket } from 'socket.io-client';
+import io, { Socket } from 'socket.io-client-v4';
 import jwt from 'jsonwebtoken';
 import dayjs from 'dayjs';
 import type {

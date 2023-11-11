@@ -17,11 +17,11 @@ import {
     createBot,
     listen,
 } from '@statsanytime/trade-bots';
-import io from 'socket.io-client';
+import io from 'socket.io-client-v4';
 import { flushPromises } from './utils.js';
 import { marketListingUpdateEvent } from './mocks.js';
 
-vi.mock('socket.io-client', () => {
+vi.mock('socket.io-client-v4', () => {
     const onMock = vi.fn();
     const offMock = vi.fn();
     const emitMock = vi.fn();
