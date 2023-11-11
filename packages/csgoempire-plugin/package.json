@@ -1,6 +1,6 @@
 {
     "name": "@statsanytime/trade-bots-csgoempire",
-    "version": "1.0.0-alpha.11",
+    "version": "1.0.0-alpha.12",
     "type": "module",
     "exports": {
         ".": {
