@@ -8,7 +8,11 @@ import {
     vi,
 } from 'vitest';
 import { setupServer } from 'msw/node';
-import { createPricempirePlugin, getPrice, getPricePercentage } from '../src/index.js';
+import {
+    createPricempirePlugin,
+    getPrice,
+    getPricePercentage,
+} from '../src/index.js';
 import {
     createPipeline,
     startBots,
@@ -120,7 +124,7 @@ describe('Pricempire Plugin', () => {
         const item = new Item({
             marketName: 'USP-S | Kill Confirmed (Minimal Wear)',
             marketId: 'test',
-            priceUsd: 9.80,
+            priceUsd: 9.8,
             assetId: 'test',
         });
 
@@ -175,7 +179,7 @@ describe('Pricempire Plugin', () => {
         const item = new Item({
             marketName: 'Item that does not exist',
             marketId: 'test',
-            priceUsd: 9.80,
+            priceUsd: 9.8,
             assetId: 'test',
         });
 

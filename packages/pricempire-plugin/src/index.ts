@@ -71,7 +71,11 @@ export function getPricePercentage(attributes: string) {
     const itemPrice = context.item!.priceUsd;
 
     if (!targetPrice) {
-        throw new SilentError(`Failed to get pricempire price ${attributes} for item ${context.item!.marketName}`);
+        throw new SilentError(
+            `Failed to get pricempire price ${attributes} for item ${
+                context.item!.marketName
+            }`,
+        );
     }
 
     return new Big(itemPrice).div(targetPrice).times(100).toNumber();
