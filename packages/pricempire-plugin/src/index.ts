@@ -1,5 +1,6 @@
-import { useContext, type Plugin } from '@statsanytime/trade-bots';
+import { useContext, type Plugin, SilentError } from '@statsanytime/trade-bots';
 import consola from 'consola';
+import Big from 'big.js';
 import get from 'lodash/get.js';
 import { createFetch } from 'ofetch';
 import { PricempirePluginOptions } from './types.js';
@@ -60,7 +61,20 @@ export function getPrice(attributes: string) {
         return undefined;
     }
 
-    return price / 100;
+    return new Big(price).div(100).toNumber();
+}
+
+export function getPricePercentage(attributes: string) {
+    const context = useContext();
+
+    const targetPrice = getPrice(attributes);
+    const itemPrice = context.item!.priceUsd;
+
+    if (!targetPrice) {
+        throw new SilentError(`Failed to get pricempire price ${attributes} for item ${context.item!.marketName}`);
+    }
+
+    return new Big(itemPrice).div(targetPrice).times(100).toNumber();
 }
 
 export function createPricempirePlugin(options: PricempirePluginOptions) {

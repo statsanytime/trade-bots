@@ -8,7 +8,7 @@ import {
     vi,
 } from 'vitest';
 import { setupServer } from 'msw/node';
-import { createPricempirePlugin, getPrice } from '../src/index.js';
+import { createPricempirePlugin, getPrice, getPricePercentage } from '../src/index.js';
 import {
     createPipeline,
     startBots,
@@ -17,6 +17,7 @@ import {
     Item,
     getContext,
     callContextHook,
+    handleError,
 } from '@statsanytime/trade-bots';
 import { flushPromises } from './utils.js';
 import { mswItemPrices } from './mocks.js';
@@ -75,12 +76,126 @@ describe('Pricempire Plugin', () => {
                 marketplace: 'csgoempire',
             },
             async () => {
-                await callContextHook('random-event', item);
+                try {
+                    await callContextHook('random-event', item);
+                } catch (err) {
+                    handleError(err);
+                }
             },
         );
 
         await flushPromises();
 
         expect(withdrawMock).toHaveBeenCalled();
+    });
+
+    test('getPercentageOfPrice', async () => {
+        mswServer.use(mswItemPrices);
+
+        const withdrawMock = vi.fn();
+
+        const bot = createBot({
+            name: 'test',
+            pipeline: createPipeline('test', () => {
+                listen('random-event', () => {
+                    if (getPricePercentage('buff_buy') <= 98) {
+                        withdrawMock();
+                    }
+                });
+            }),
+            plugins: [
+                createPricempirePlugin({
+                    apiKey: 'testApiKey',
+                    sources: ['buy_order'],
+                    version: 'v3',
+                }),
+            ],
+        });
+
+        startBots([bot]);
+
+        await flushPromises();
+
+        // Call it as if an event was triggered
+        const item = new Item({
+            marketName: 'USP-S | Kill Confirmed (Minimal Wear)',
+            marketId: 'test',
+            priceUsd: 9.80,
+            assetId: 'test',
+        });
+
+        getContext().call(
+            {
+                bot,
+                item,
+                marketplace: 'csgoempire',
+            },
+            async () => {
+                try {
+                    await callContextHook('random-event', item);
+                } catch (err) {
+                    handleError(err);
+                }
+            },
+        );
+
+        await flushPromises();
+
+        expect(withdrawMock).toHaveBeenCalled();
+    });
+
+    test('getPercentageOfPrice missing item', async () => {
+        mswServer.use(mswItemPrices);
+
+        const withdrawMock = vi.fn();
+
+        const bot = createBot({
+            name: 'test',
+            pipeline: createPipeline('test', () => {
+                listen('random-event', () => {
+                    if (getPricePercentage('buff_buy') <= 98) {
+                        withdrawMock();
+                    }
+                });
+            }),
+            plugins: [
+                createPricempirePlugin({
+                    apiKey: 'testApiKey',
+                    sources: ['buy_order'],
+                    version: 'v3',
+                }),
+            ],
+        });
+
+        startBots([bot]);
+
+        await flushPromises();
+
+        // Call it as if an event was triggered
+        const item = new Item({
+            marketName: 'Item that does not exist',
+            marketId: 'test',
+            priceUsd: 9.80,
+            assetId: 'test',
+        });
+
+        getContext().call(
+            {
+                bot,
+                item,
+                marketplace: 'csgoempire',
+            },
+            async () => {
+                try {
+                    await callContextHook('random-event', item);
+                } catch (err) {
+                    handleError(err);
+                }
+            },
+        );
+
+        await flushPromises();
+
+        expect(withdrawMock).not.toHaveBeenCalled();
     });
 });
