@@ -23,6 +23,7 @@ export interface BotOptions {
     name: string | undefined;
     pipeline: Pipeline;
     plugins: Plugin[];
+    storage?: Storage;
 }
 
 const bot = createBot({
