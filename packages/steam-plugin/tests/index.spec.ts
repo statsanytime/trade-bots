@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { createSteamPlugin } from '../src/index.js';
 import { createPipeline, startBots, createBot } from '@statsanytime/trade-bots';
+import { testStorage, flushPromises } from '@statsanytime/trade-bots-shared';
 import {
-    flushPromises,
     mockSteamSession,
     mockSteamTradeOfferManager,
     mockSteamUser,
@@ -29,6 +29,7 @@ describe('Steam Plugin', () => {
                     identitySecret: 'test',
                 }),
             ],
+            storage: testStorage,
         });
 
         startBots([bot]);

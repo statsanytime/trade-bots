@@ -51,7 +51,7 @@ type CSGOEmpireItem = {
     market_value: number;
 };
 
-type CSGOEmpireWithdrawalStatus = {
+export type CSGOEmpireWithdrawalStatus = {
     type: 'withdrawal';
     data: {
         id: number;
@@ -64,7 +64,7 @@ type CSGOEmpireWithdrawalStatus = {
     };
 };
 
-type CSGOEmpireSendingStatus = {
+export type CSGOEmpireWithdrawalSendingStatus = {
     type: 'withdrawal';
     data: {
         status: CSGOEmpireTradeStatus.Sending;
@@ -84,7 +84,7 @@ type CSGOEmpireSendingStatus = {
     };
 };
 
-type CSGOEmpireSentStatus = {
+export type CSGOEmpireWithdrawalSentStatus = {
     type: 'withdrawal';
     data: {
         status: CSGOEmpireTradeStatus.Sent;
@@ -103,7 +103,7 @@ type CSGOEmpireSentStatus = {
     };
 };
 
-type CSGOEmpireCompletedStatus = {
+export type CSGOEmpireWithdrawalCompletedStatus = {
     type: 'withdrawal';
     data: {
         status: CSGOEmpireTradeStatus.Completed;
@@ -116,8 +116,8 @@ type CSGOEmpireCompletedStatus = {
     };
 };
 
-type CSGOEmpireErroredStatus = {
-    type: 'withdrawal';
+export type CSGOEmpireErroredStatus = {
+    type: 'deposit' | 'withdrawal';
     data: {
         status: CSGOEmpireTradeStatus.Error;
         status_message: 'Error';
@@ -129,11 +129,103 @@ type CSGOEmpireErroredStatus = {
     };
 };
 
+export type CSGOEmpireDepositStatus = {
+    type: 'deposit';
+    data: {
+        item: {
+            market_name: string;
+            market_value: number;
+            asset_id: number;
+        };
+        status: CSGOEmpireTradeStatus.Confirming;
+        status_message: 'Confirming';
+        tradeoffer_id: number;
+        id: number;
+        item_id: number;
+    };
+};
+
+export type CSGOEmpireDepositSendingStatus = {
+    type: 'deposit';
+    data: {
+        item: {
+            market_name: string;
+            market_value: number;
+            asset_id: number;
+        };
+        status: CSGOEmpireTradeStatus.Sending;
+        status_message: 'Sending';
+        metadata: {
+            item_validation: {
+                numWrongItemDetections: number;
+                validItemDetected: boolean;
+            };
+            expires_at: number;
+            trade_url: string;
+            partner: {
+                id: number;
+                steam_id: string;
+                steam_name: string;
+                avatar: string;
+                avatar_full: string;
+                profile_url: string;
+                timecreated: number;
+                steam_level: number;
+            };
+        };
+        id: number;
+        item_id: number;
+        tradeoffer_id: number;
+    };
+};
+
+export type CSGOEmpireDepositSentStatus = {
+    type: 'deposit';
+    data: {
+        item: {
+            market_name: string;
+            market_value: number;
+            asset_id: number;
+        };
+        status: CSGOEmpireTradeStatus.Sent;
+        status_message: 'Sent';
+        metadata: {
+            item_validation: {
+                validItemDetected: true;
+            };
+            expires_at: number;
+        };
+        id: number;
+        item_id: number;
+        tradeoffer_id: number;
+    };
+};
+
+export type CSGOEmpireDepositCompletedStatus = {
+    type: 'deposit';
+    data: {
+        item: {
+            market_name: string;
+            market_value: number;
+            asset_id: number;
+        };
+        status: CSGOEmpireTradeStatus.Completed;
+        status_message: 'Completed';
+        id: number;
+        item_id: number;
+        tradeoffer_id: number;
+    };
+};
+
 export type CSGOEmpireTradeStatusEvent =
     | CSGOEmpireWithdrawalStatus
-    | CSGOEmpireSendingStatus
-    | CSGOEmpireSentStatus
-    | CSGOEmpireCompletedStatus
+    | CSGOEmpireWithdrawalSendingStatus
+    | CSGOEmpireWithdrawalSentStatus
+    | CSGOEmpireWithdrawalCompletedStatus
+    | CSGOEmpireDepositStatus
+    | CSGOEmpireDepositSendingStatus
+    | CSGOEmpireDepositSentStatus
+    | CSGOEmpireDepositCompletedStatus
     | CSGOEmpireErroredStatus;
 
 export type InitSocketEvent =

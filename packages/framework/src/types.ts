@@ -1,10 +1,12 @@
 import { Dayjs } from 'dayjs';
-import { Bot, Item } from './index.js';
+import { Bot, Item, Withdrawal } from './index.js';
+import { type Storage } from 'unstorage';
 
 export interface BotOptions {
     name: string | undefined;
     pipeline: Pipeline;
     plugins: Plugin[];
+    storage?: Storage;
 }
 
 export interface ItemOptions {
@@ -29,7 +31,7 @@ export interface PipelineContext {
     item?: Item;
     marketplace?: string;
     event?: any;
-    withdrawnAt?: Dayjs;
+    withdrawal?: Withdrawal;
 }
 
 export interface ScheduleDepositOptions {
@@ -38,9 +40,17 @@ export interface ScheduleDepositOptions {
     amountUsd: number;
     assetId: string;
     marketplaceData?: Record<string, any>;
-    withdrawnAt: string;
+    withdrawalId: string;
 }
 
 export interface ScheduledDeposit extends ScheduleDepositOptions {
     //
+}
+
+export interface CreateTradeOptions {
+    marketplace: string;
+    marketplaceId: string;
+    amountUsd: number;
+    marketplaceData?: Record<string, any>;
+    item: Item;
 }

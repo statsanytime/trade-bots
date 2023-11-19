@@ -38,6 +38,22 @@ export const newItemEvent = {
     },
 };
 
+export const depositTradeStatusEvent = {
+    type: 'deposit',
+    data: {
+        item: {
+            market_name: 'StatTrak™ AK-47 | Aquamarine Revenge (Well-Worn)',
+            market_value: 51.43,
+            asset_id: 123,
+        },
+        status: 4,
+        status_message: 'Confirming',
+        tradeoffer_id: 1,
+        id: 1,
+        item_id: 1,
+    },
+};
+
 export const mswUserInventory = rest.get(
     'https://csgoempire.com/api/v2/trading/user/inventory',
     async (req, res, ctx) => {
@@ -48,7 +64,7 @@ export const mswUserInventory = rest.get(
                 data: [
                     {
                         // This is normally returned as a number, but this is a test, so who cares
-                        asset_id: 'test',
+                        asset_id: 123,
                         created_at: '2023-10-20 14:48:30',
                         custom_price_percentage: null,
                         full_position: 1,
@@ -85,8 +101,12 @@ export const mswWithdraw = rest.post(
     'https://csgoempire.com/api/v2/trading/deposit/:id/withdraw',
     async (req, res, ctx) => {
         return res(
+            // This response is incomplete, but it doesn't matter for the test
             ctx.json({
                 success: true,
+                data: {
+                    id: 1,
+                },
             }),
         );
     },

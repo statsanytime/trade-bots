@@ -1,9 +1,4 @@
-import {
-    useContext,
-    type Plugin,
-    SilentError,
-    storage,
-} from '@statsanytime/trade-bots';
+import { useContext, type Plugin, SilentError } from '@statsanytime/trade-bots';
 import consola from 'consola';
 import Big from 'big.js';
 import get from 'lodash/get.js';
@@ -32,6 +27,8 @@ class PricempirePlugin implements Plugin {
     }
 
     async boot() {
+        const context = useContext();
+
         // Automatically fetch prices once an hour
         setInterval(
             () => {
@@ -40,8 +37,10 @@ class PricempirePlugin implements Plugin {
             1000 * 60 * 60,
         );
 
-        if (await storage.hasItem('pricempire-prices')) {
-            const storedData = (await storage.getItem('pricempire-prices')) as {
+        if (await context.bot.storage.hasItem('pricempire-prices')) {
+            const storedData = (await context.bot.storage.getItem(
+                'pricempire-prices',
+            )) as {
                 prices: Record<string, unknown>;
                 cachedAt: number;
             };
@@ -59,6 +58,8 @@ class PricempirePlugin implements Plugin {
     }
 
     async fetchPrices() {
+        const context = useContext();
+
         try {
             this.prices = await this.ofetch(
                 `https://api.pricempire.com/${this.version}/items/prices`,
@@ -70,7 +71,7 @@ class PricempirePlugin implements Plugin {
                 },
             );
 
-            await storage.setItem('pricempire-prices', {
+            await context.bot.storage.setItem('pricempire-prices', {
                 prices: this.prices,
                 cachedAt: Date.now(),
             });

@@ -32,6 +32,7 @@
         "steamcommunity": "^3.47.0"
     },
     "devDependencies": {
+        "@statsanytime/trade-bots-shared": "workspace:^",
         "@types/node": "^20.6.2",
         "unbuild": "^2.0.0",
         "vitest": "^0.34.5"

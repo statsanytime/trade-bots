@@ -6,11 +6,11 @@ import {
     handleError,
     useContext,
     callContextHook,
+    createWithdrawal,
 } from '@statsanytime/trade-bots';
 import { createFetch } from 'ofetch';
 import io, { Socket } from 'socket.io-client-v4';
 import jwt from 'jsonwebtoken';
-import dayjs from 'dayjs';
 import type {
     CSGO500Listing,
     CSGO500MarketListingUpdateEvent,
@@ -114,7 +114,7 @@ export async function withdraw() {
     try {
         const listing = context.event.listing as CSGO500Listing;
 
-        await plugin.ofetch(
+        const withdrawRes = await plugin.ofetch(
             'https://tradingapi.500.casino/api/v1/market/withdraw',
             {
                 method: 'POST',
@@ -126,7 +126,13 @@ export async function withdraw() {
             },
         );
 
-        context.withdrawnAt = dayjs();
+        const withdrawal = await createWithdrawal({
+            marketplaceId: withdrawRes.data.listing.id,
+        });
+
+        context.withdrawal = withdrawal;
+
+        return withdrawal;
     } catch (err) {
         throw new SilentError('Failed to withdraw item', err);
     }

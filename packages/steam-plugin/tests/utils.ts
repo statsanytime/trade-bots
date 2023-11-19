@@ -3,9 +3,6 @@ import SteamUser from 'steam-user';
 import { LoginSession } from 'steam-session';
 import TradeOfferManager from 'steam-tradeoffer-manager';
 
-export const flushPromises = () =>
-    new Promise((resolve) => setImmediate(resolve));
-
 export function mockSteamTradeOfferManager() {
     const TradeOfferMock = {
         on: vi.fn(),

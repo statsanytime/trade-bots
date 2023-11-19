@@ -49,7 +49,7 @@ export interface ScheduledDeposit {
     amountUsd: number;
     assetId: string;
     marketplaceData?: Record<string, any>;
-    withdrawnAt: string;
+    withdrawalId: string;
 }
 ```
 

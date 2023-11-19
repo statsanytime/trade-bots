@@ -31,6 +31,7 @@
         "ofetch": "^1.3.3"
     },
     "devDependencies": {
+        "@statsanytime/trade-bots-shared": "workspace:^",
         "@types/big.js": "^6.2.1",
         "@types/lodash": "^4.14.201",
         "@types/node": "^20.6.2",

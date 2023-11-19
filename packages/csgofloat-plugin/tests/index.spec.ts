@@ -1,4 +1,3 @@
-import fs from 'node:fs/promises';
 import {
     afterAll,
     afterEach,
@@ -20,11 +19,11 @@ import {
     getContext,
     Item,
     callContextHook,
+    Withdrawal,
+    appendStorageItem,
+    checkScheduledDeposits,
 } from '@statsanytime/trade-bots';
-import { flushPromises } from './utils.js';
-import dayjs from 'dayjs';
-import { resolve } from 'node:path';
-import { cwd } from 'node:process';
+import { testStorage, flushPromises } from '@statsanytime/trade-bots-shared';
 
 const mswServer = setupServer();
 
@@ -38,11 +37,6 @@ describe('deposit test', () => {
     afterAll(() => mswServer.close());
 
     test('schedule deposit works', async () => {
-        vi.spyOn(fs, 'readFile').mockResolvedValue('[]');
-        vi.spyOn(fs, 'mkdir').mockResolvedValue(undefined);
-
-        const writeFileSpy = vi.spyOn(fs, 'writeFile').mockResolvedValue();
-
         const bot = createBot({
             name: 'test',
             pipeline: createPipeline('test', function () {
@@ -58,6 +52,7 @@ describe('deposit test', () => {
                     apiKey: 'test',
                 }),
             ],
+            storage: testStorage,
         });
 
         startBots([bot]);
@@ -72,11 +67,20 @@ describe('deposit test', () => {
             assetId: 'test',
         });
 
+        const withdrawal = new Withdrawal({
+            marketplace: 'csgoempire',
+            marketplaceId: 'test',
+            amountUsd: 65.19,
+            item,
+        });
+
+        await appendStorageItem(testStorage, 'withdrawals', withdrawal);
+
         getContext().call(
             {
                 bot,
                 item,
-                withdrawnAt: dayjs(),
+                withdrawal,
                 marketplace: 'csgoempire',
             },
             async () => {
@@ -86,31 +90,24 @@ describe('deposit test', () => {
 
         await flushPromises();
 
-        const scheduledDeposit = JSON.parse(
-            writeFileSpy.mock.calls[0][1] as string,
-        )[0];
+        const scheduledDeposits =
+            await testStorage.getItem('scheduled-deposits');
+        const scheduledDeposit = scheduledDeposits?.[0];
 
-        expect(scheduledDeposit.withdrawnAt).toBeDefined();
-        expect(
-            dayjs(scheduledDeposit.withdrawnAt).isSame(dayjs(), 'day'),
-        ).toBeTruthy();
+        expect(scheduledDeposit.withdrawalId).toBeDefined();
 
-        expect(writeFileSpy).toHaveBeenCalledWith(
-            resolve(cwd(), './.statsanytime/scheduled-deposits'),
-            JSON.stringify([
-                {
-                    marketplaceData: {
-                        type: 'auction',
-                    },
-                    marketplace: 'csgofloat',
-                    withdrawMarketplace: 'csgoempire',
-                    amountUsd: 68.45,
-                    assetId: 'test',
-                    withdrawnAt: scheduledDeposit.withdrawnAt,
+        expect(scheduledDeposits).toEqual([
+            {
+                marketplaceData: {
+                    type: 'auction',
                 },
-            ]),
-            'utf8',
-        );
+                marketplace: 'csgofloat',
+                withdrawMarketplace: 'csgoempire',
+                amountUsd: 68.45,
+                assetId: 'test',
+                withdrawalId: expect.any(String),
+            },
+        ]);
     });
 
     it('makes deposit correctly', async () => {
@@ -131,26 +128,35 @@ describe('deposit test', () => {
             ),
         );
 
-        vi.useFakeTimers();
-
         // Start from previous test
-        vi.spyOn(fs, 'readFile').mockResolvedValue(
-            JSON.stringify([
-                {
-                    marketplaceData: {
-                        type: 'auction',
-                    },
-                    marketplace: 'csgofloat',
-                    withdrawMarketplace: 'csgoempire',
-                    amountUsd: 68.45,
-                    assetId: 'test',
-                    // 8 days ago
-                    withdrawnAt: new Date(
-                        Date.now() - 8 * 24 * 60 * 60 * 1000,
-                    ).toISOString(),
+        const item = new Item({
+            marketName: 'USP-S | Kill Confirmed (Minimal Wear)',
+            marketId: 'test',
+            priceUsd: 65.19,
+            assetId: 'test',
+        });
+
+        const withdrawal = new Withdrawal({
+            marketplace: 'csgoempire',
+            marketplaceId: 'test',
+            amountUsd: 65.19,
+            item,
+        });
+
+        await appendStorageItem(testStorage, 'withdrawals', withdrawal);
+
+        await testStorage.setItem('scheduled-deposits', [
+            {
+                marketplaceData: {
+                    type: 'auction',
                 },
-            ]),
-        );
+                marketplace: 'csgofloat',
+                withdrawMarketplace: 'csgoempire',
+                amountUsd: 68.45,
+                assetId: 'test',
+                withdrawalId: withdrawal.id,
+            },
+        ]);
 
         const bot = createBot({
             name: 'test',
@@ -160,22 +166,41 @@ describe('deposit test', () => {
                     apiKey: 'test',
                 }),
             ],
+            storage: testStorage,
         });
 
         startBots([bot]);
 
-        vi.runOnlyPendingTimers();
+        await flushPromises();
 
-        vi.useRealTimers();
+        // Go forward 8 days when the item is tradable
+        vi.setSystemTime(new Date(Date.now() + 8 * 24 * 60 * 60 * 1000));
 
-        await flushPromises();
-        await flushPromises();
-        await flushPromises();
+        await checkScheduledDeposits(bot);
+
+        await vi.waitUntil(() => testStorage.hasItem('deposits'));
 
         expect(depositMock).toHaveBeenCalledWith({
             asset_id: 'test',
             price: 6845,
             type: 'auction',
         });
+
+        expect(await testStorage.getItem('deposits')).toEqual([
+            {
+                amountUsd: 68.45,
+                id: expect.any(String),
+                item: {
+                    assetId: 'test',
+                    marketId: 'test',
+                    marketName: 'USP-S | Kill Confirmed (Minimal Wear)',
+                    priceUsd: 68.45,
+                },
+                madeAt: expect.any(String),
+                marketplace: 'csgofloat',
+            },
+        ]);
+
+        expect(await testStorage.getItem('scheduled-deposits')).toEqual([]);
     });
 });

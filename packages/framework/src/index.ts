@@ -13,8 +13,10 @@ import type {
     ScheduleDepositOptions,
     ScheduledDeposit,
 } from './types.js';
-import { appendStorageItem, storage } from './storage.js';
 import { handleError } from './errors.js';
+import { createStorage, Storage } from 'unstorage';
+import fsDriver from 'unstorage/drivers/fs';
+import { getWithdrawal } from './trades.js';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -43,14 +45,37 @@ export async function callContextHook(event: string, data: any) {
     return context.bot.hooks.callHook(event, data);
 }
 
+export async function appendStorageItem(
+    storage: Storage,
+    key: string,
+    item: any,
+) {
+    const curr = (await storage.getItem(key)) || [];
+
+    if (!Array.isArray(curr)) {
+        throw new Error(`Expected ${key} to be an array`);
+    }
+
+    await storage.setItem(key, [...curr, item]);
+}
+
 export function scheduleDeposit(options: ScheduleDepositOptions) {
-    return appendStorageItem('scheduled-deposits', options);
+    const context = useContext();
+
+    return appendStorageItem(
+        context.bot.storage,
+        'scheduled-deposits',
+        options,
+    );
 }
 
 export async function getScheduledDeposits(
     filters: Partial<ScheduledDeposit> = {},
 ): Promise<ScheduledDeposit[]> {
-    const items = (await storage.getItem('scheduled-deposits')) ?? [];
+    const context = useContext();
+
+    const items =
+        (await context.bot.storage.getItem('scheduled-deposits')) ?? [];
 
     if (!Array.isArray(items)) {
         throw new Error(
@@ -72,6 +97,30 @@ export async function getScheduledDeposits(
     });
 }
 
+export async function removeScheduledDeposit(
+    scheduledDeposit: ScheduledDeposit,
+) {
+    const context = useContext();
+
+    const scheduledDeposits: ScheduledDeposit[] | null =
+        await context.bot.storage.getItem('scheduled-deposits');
+
+    if (!scheduledDeposits) {
+        return;
+    }
+
+    await context.bot.storage.setItem(
+        'scheduled-deposits',
+        scheduledDeposits.filter(
+            (d: ScheduledDeposit) =>
+                !(
+                    d.marketplace === scheduledDeposit.marketplace &&
+                    d.withdrawalId === scheduledDeposit.withdrawalId
+                ),
+        ),
+    );
+}
+
 // Steam lock trades for 7 days after the trade is created
 // However, it's only unlocked once per day at midnight PST, meaning it can be locked for almost 8 days
 export function depositIsTradable(withdrawnAt: Dayjs) {
@@ -85,6 +134,45 @@ export function depositIsTradable(withdrawnAt: Dayjs) {
     const now = dayjs();
 
     return now.isAfter(unlockTimePST) || now.isSame(unlockTimePST, 'minute');
+}
+
+export async function checkScheduledDeposits(bot: Bot) {
+    const context = getContext();
+
+    const contextData: PipelineContext = { bot };
+
+    context.call(contextData, async () => {
+        const deposits = await getScheduledDeposits();
+
+        const toDepositPromises = deposits.map(async (deposit) => {
+            const withdrawal = await getWithdrawal(deposit.withdrawalId);
+
+            if (!withdrawal) {
+                return false;
+            }
+
+            return depositIsTradable(dayjs(withdrawal.madeAt))
+                ? deposit
+                : false;
+        });
+
+        const toDeposit = (await Promise.all(toDepositPromises)).filter(
+            Boolean,
+        ) as ScheduledDeposit[];
+
+        for (const depositObject of toDeposit) {
+            const withdrawal = await getWithdrawal(depositObject.withdrawalId);
+
+            if (!withdrawal) {
+                continue;
+            }
+
+            contextData.withdrawal = withdrawal;
+            contextData.item = withdrawal.item;
+
+            await bot.hooks.callHook('deposit-redepositable', depositObject);
+        }
+    });
 }
 
 export async function startBots(bots: Bot[]) {
@@ -105,6 +193,8 @@ export async function startBots(bots: Bot[]) {
                 handleError(err);
             }
         });
+
+        setInterval(() => checkScheduledDeposits(bot), 1000 * 60 * 5);
     }
 }
 
@@ -113,6 +203,7 @@ export class Bot {
     pipeline: Pipeline;
     plugins: Record<string, Plugin>;
     hooks: Hookable;
+    storage: Storage;
 
     constructor(options: BotOptions) {
         this.name = options.name;
@@ -128,6 +219,14 @@ export class Bot {
         );
 
         this.hooks = createHooks();
+
+        this.storage =
+            options.storage ??
+            createStorage({
+                driver: fsDriver({
+                    base: './.statsanytime',
+                }),
+            });
     }
 
     bootPlugins(): Promise<void[]> {
@@ -148,5 +247,5 @@ export { createPipeline } from './pipelines.js';
 export * from './types.js';
 export * from './pipelines.js';
 export * from './item.js';
-export * from './storage.js';
 export * from './errors.js';
+export * from './trades.js';

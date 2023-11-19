@@ -1,9 +1,6 @@
 import { vi } from 'vitest';
 import CSGOEmpire from 'csgoempire-wrapper';
 
-export const flushPromises = () =>
-    new Promise((resolve) => setImmediate(resolve));
-
 export function mockCSGOEmpire() {
     const listeners = {};
     const sockets = {};

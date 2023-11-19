@@ -17,8 +17,8 @@ import {
     createBot,
     listen,
 } from '@statsanytime/trade-bots';
+import { testStorage, flushPromises } from '@statsanytime/trade-bots-shared';
 import io from 'socket.io-client-v4';
-import { flushPromises } from './utils.js';
 import { marketListingUpdateEvent } from './mocks.js';
 
 vi.mock('socket.io-client-v4', () => {
@@ -37,11 +37,11 @@ vi.mock('socket.io-client-v4', () => {
 
 const mswServer = setupServer();
 
-describe('CSGOEmpire Plugin', () => {
+describe('CSGO500 Plugin', () => {
     beforeAll(() => mswServer.listen());
 
     afterEach(() => {
-        vi.clearAllMocks();
+        vi.restoreAllMocks();
         mswServer.resetHandlers();
     });
 
@@ -61,6 +61,7 @@ describe('CSGOEmpire Plugin', () => {
                     userId: 'testUserId',
                 }),
             ],
+            storage: testStorage,
         });
 
         startBots([bot]);
@@ -103,7 +104,16 @@ describe('CSGOEmpire Plugin', () => {
                 async (req, res, ctx) => {
                     withdrawSpy(await req.json());
 
-                    return res(ctx.status(200));
+                    return res(
+                        ctx.json({
+                            success: true,
+                            data: {
+                                listing: {
+                                    id: 'test',
+                                },
+                            },
+                        }),
+                    );
                 },
             ),
         );
@@ -121,6 +131,7 @@ describe('CSGOEmpire Plugin', () => {
                     userId: 'testUserId',
                 }),
             ],
+            storage: testStorage,
         });
 
         startBots([bot]);
@@ -140,5 +151,20 @@ describe('CSGOEmpire Plugin', () => {
             listingValue: 17820,
             selectedBalance: 'bux',
         });
+
+        expect(await testStorage.getItem('withdrawals')).toEqual([
+            {
+                amountUsd: 10.696278511404563,
+                id: expect.any(String),
+                item: {
+                    marketId: '654a9048383f113fc528188c',
+                    marketName: 'M4A4 | In Living Color (Minimal Wear)',
+                    priceUsd: 10.696278511404563,
+                },
+                madeAt: expect.any(String),
+                marketplace: 'csgo500',
+                marketplaceId: 'test',
+            },
+        ]);
     });
 });

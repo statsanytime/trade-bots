@@ -1,17 +1,14 @@
 import {
-    Bot,
-    PipelineContext,
+    Deposit,
     Plugin,
     ScheduledDeposit,
-    depositIsTradable,
+    appendStorageItem,
     scheduleDeposit as frameworkScheduleDeposit,
-    getContext,
-    getScheduledDeposits,
     useContext,
+    removeScheduledDeposit,
 } from '@statsanytime/trade-bots';
 import Big from 'big.js';
 import { createFetch } from 'ofetch';
-import dayjs from 'dayjs';
 import consola from 'consola';
 import pickBy from 'lodash/pickBy.js';
 import {
@@ -39,46 +36,34 @@ class CSGOFloatPlugin implements Plugin {
     boot() {
         const context = useContext();
 
-        setInterval(
-            () => this.checkScheduledDeposits(context.bot),
-            1000 * 60 * 5,
-        );
-    }
+        context.bot.hooks.hook(
+            'deposit-redepositable',
+            async (depositObject: ScheduledDeposit) => {
+                if (depositObject.marketplace !== MARKETPLACE) {
+                    return;
+                }
 
-    async checkScheduledDeposits(bot: Bot) {
-        const deposits = await getScheduledDeposits({
-            marketplace: MARKETPLACE,
-        });
-
-        const toDeposit = deposits.filter((deposit) =>
-            depositIsTradable(dayjs(deposit.withdrawnAt!)),
-        );
-
-        // Create a new context for the deposit
-        const context = getContext();
-
-        const contextData: PipelineContext = { bot };
-
-        context.call(contextData, async () => {
-            for (const depositObject of toDeposit) {
                 try {
                     await deposit(depositObject);
+                    await removeScheduledDeposit(depositObject);
                 } catch (err) {
                     consola.error(err);
                     consola.error('Failed to deposit item', depositObject);
                 }
-            }
-        });
+            },
+        );
     }
 }
 
-export function deposit(deposit: ScheduledDeposit) {
+export async function deposit(scheduledDeposit: ScheduledDeposit) {
     const context = useContext();
     const plugin = context.bot.plugins['csgofloat'] as CSGOFloatPlugin;
 
-    const amountCents = new Big(deposit.amountUsd).times(100).toNumber();
+    const amountCents = new Big(scheduledDeposit.amountUsd)
+        .times(100)
+        .toNumber();
 
-    return plugin.ofetch(
+    const depositRes = await plugin.ofetch(
         `https://csgofloat.com/api/${plugin.version}/listings`,
         {
             method: 'POST',
@@ -87,12 +72,26 @@ export function deposit(deposit: ScheduledDeposit) {
                 Authorization: plugin.apiKey,
             },
             body: JSON.stringify({
-                ...(deposit.marketplaceData ?? {}),
-                asset_id: deposit.assetId,
+                ...(scheduledDeposit.marketplaceData ?? {}),
+                asset_id: scheduledDeposit.assetId,
                 price: amountCents,
             }),
         },
     );
+
+    const deposit = new Deposit({
+        marketplace: MARKETPLACE,
+        marketplaceId: depositRes.id,
+        amountUsd: scheduledDeposit.amountUsd,
+        item: {
+            ...context.item!,
+            priceUsd: scheduledDeposit.amountUsd,
+        },
+    });
+
+    await appendStorageItem(context.bot.storage, 'deposits', deposit);
+
+    return deposit;
 }
 
 export async function scheduleDeposit(
@@ -105,6 +104,12 @@ export async function scheduleDeposit(
     if (!context.item?.assetId) {
         throw new Error(
             'Asset ID is not defined. Ensure a withdrawal has been made and awaited.',
+        );
+    }
+
+    if (!context.withdrawal) {
+        throw new Error(
+            'Withdrawal is not defined. Ensure a withdrawal has been made and awaited.',
         );
     }
 
@@ -126,7 +131,7 @@ export async function scheduleDeposit(
         withdrawMarketplace: context.marketplace!,
         amountUsd: amountUsd.round(2).toNumber(),
         assetId: context.item.assetId,
-        withdrawnAt: context.withdrawnAt!.toISOString(),
+        withdrawalId: context.withdrawal.id,
     });
 }
 

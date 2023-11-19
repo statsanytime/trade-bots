@@ -1,0 +1,30 @@
+{
+    "name": "@statsanytime/trade-bots-shared",
+    "private": true,
+    "type": "module",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.mjs",
+            "require": "./dist/index.cjs"
+        }
+    },
+    "main": "./dist/index.cjs",
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "unbuild",
+        "build-stub": "unbuild --stub"
+    },
+    "author": "Pixel",
+    "dependencies": {
+        "unstorage": "^1.9.0"
+    },
+    "devDependencies": {
+        "@types/node": "^20.6.2",
+        "unbuild": "^2.0.0"
+    }
+}
