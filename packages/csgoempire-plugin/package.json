@@ -1,6 +1,6 @@
 {
     "name": "@statsanytime/trade-bots-csgoempire",
-    "version": "1.0.0-alpha.14",
+    "version": "1.0.0-alpha.15",
     "type": "module",
     "exports": {
         ".": {
@@ -23,7 +23,7 @@
     "author": "Pixel",
     "license": "MIT",
     "dependencies": {
-        "@statsanytime/trade-bots": "^1.0.0-alpha.14",
+        "@statsanytime/trade-bots": "^1.0.0-alpha.15",
         "big.js": "^6.2.1",
         "consola": "^3.2.3",
         "csgoempire-wrapper": "^0.1.19",
