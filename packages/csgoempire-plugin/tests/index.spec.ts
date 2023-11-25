@@ -31,8 +31,10 @@ import {
     newItemEvent,
     mswUserInventory,
     mswWithdraw,
+    mswBid,
     depositTradeStatusEvent,
     auctionUpdateEvent,
+    withdrawTradeStatusEvent,
 } from './mocks.js';
 
 const mswServer = setupServer();
@@ -48,6 +50,7 @@ describe('CSGOEmpire Plugin', () => {
 
     afterEach(() => {
         vi.restoreAllMocks();
+        vi.useRealTimers();
         mswServer.resetHandlers();
 
         testStorage.clear();
@@ -149,14 +152,14 @@ describe('CSGOEmpire Plugin', () => {
                     priceUsd: 65.187478500172,
                     auction: {
                         bidCount: 0,
-                        endsAt: expect.any(String),
+                        endsAt: null,
                         highestBid: null,
                         highestBidder: null,
                     },
                 },
                 madeAt: expect.any(String),
                 marketplace: 'csgoempire',
-                marketplaceId: 1,
+                marketplaceId: '1',
             },
         ]);
     });
@@ -359,7 +362,9 @@ describe('CSGOEmpire Plugin', () => {
     });
 
     test('auction update works', async () => {
-        mswServer.use(mswWithdraw);
+        mswServer.use(mswBid);
+
+        const afterWithdrawFn = vi.fn();
 
         const bot = createBot({
             name: 'test',
@@ -367,6 +372,8 @@ describe('CSGOEmpire Plugin', () => {
                 listen('csgoempire:item-buyable', function (item) {
                     if (item.priceUsd === 68.25) {
                         withdraw();
+
+                        afterWithdrawFn();
                     }
                 });
             }),
@@ -396,7 +403,7 @@ describe('CSGOEmpire Plugin', () => {
 
         await flushPromises();
 
-        expect(CSGOEmpireMock.makeWithdrawalSpy).not.toHaveBeenCalled();
+        expect(CSGOEmpireMock.placeBidSpy).not.toHaveBeenCalled();
         expect(await testStorage.getItem('withdrawals')).toEqual(null);
 
         await CSGOEmpireMock.listeners['trading:auction_update'](
@@ -405,9 +412,22 @@ describe('CSGOEmpire Plugin', () => {
 
         await flushPromises();
 
-        expect(CSGOEmpireMock.makeWithdrawalSpy).toHaveBeenCalledWith(
+        expect(CSGOEmpireMock.placeBidSpy).toHaveBeenCalledWith(
             newItemEvent.id,
+            68.25,
         );
+
+        await flushPromises();
+
+        await vi.waitUntil(
+            () => 'trading:trade_status' in CSGOEmpireMock.listeners,
+        );
+
+        await CSGOEmpireMock.listeners['trading:trade_status'](
+            withdrawTradeStatusEvent,
+        );
+
+        await flushPromises();
 
         expect(await testStorage.getItem('withdrawals')).toEqual([
             {
@@ -426,8 +446,10 @@ describe('CSGOEmpire Plugin', () => {
                 },
                 madeAt: expect.any(String),
                 marketplace: 'csgoempire',
-                marketplaceId: 1,
+                marketplaceId: '1',
             },
         ]);
+
+        expect(afterWithdrawFn).toHaveBeenCalled();
     });
 });

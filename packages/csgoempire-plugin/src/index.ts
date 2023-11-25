@@ -12,6 +12,7 @@ import {
     Deposit,
     appendStorageItem,
     removeScheduledDeposit,
+    Withdrawal,
 } from '@statsanytime/trade-bots';
 import Big from 'big.js';
 import consola from 'consola';
@@ -262,7 +263,7 @@ function depositChunk(
                             deposit.assetId ===
                             (
                                 event as CSGOEmpireDepositStatus
-                            ).data.item.asset_id.toString()
+                            ).data.item.asset_id?.toString()
                         );
                     });
 
@@ -355,23 +356,109 @@ export async function scheduleDeposit(
     });
 }
 
+async function withdrawUsingBid(): Promise<Withdrawal> {
+    return new Promise(async (resolve, reject) => {
+        const contextObject = getContext();
+        const context = useContext();
+
+        const plugin = context.bot.plugins['csgoempire'] as CSGOEmpirePlugin;
+
+        await plugin.account!.placeBid(
+            context.item!.marketId as number,
+            context.item!.priceUsd,
+        );
+
+        const cancelListeners = () => {
+            plugin.account!.tradingSocket.off(
+                'trade_status',
+                handleTradeStatusEvent,
+            );
+            plugin.account!.tradingSocket.off(
+                'auction_update',
+                handleAuctionUpdateEvent,
+            );
+        };
+
+        const handleTradeStatusEvent = async (
+            events: CSGOEmpireTradeStatusEvent | CSGOEmpireTradeStatusEvent[],
+        ) => {
+            const eventList = Array.isArray(events) ? events : [events];
+
+            eventList.forEach((event) => {
+                if (
+                    event.type !== 'withdrawal' ||
+                    event.data.id !== context.event.id
+                ) {
+                    return;
+                }
+
+                if (event.data.status === CSGOEmpireTradeStatus.Confirming) {
+                    contextObject.call(context, async () => {
+                        const withdrawal = await createWithdrawal({
+                            marketplaceId: event.data.id.toString(),
+                        });
+
+                        cancelListeners();
+
+                        resolve(withdrawal);
+                    });
+                }
+            });
+        };
+
+        const handleAuctionUpdateEvent = (
+            events:
+                | CSGOEmpireAuctionUpdateEvent
+                | CSGOEmpireAuctionUpdateEvent[],
+        ) => {
+            const eventList = Array.isArray(events) ? events : [events];
+
+            eventList.forEach((event) => {
+                if (event.id !== context.item!.marketId) {
+                    return;
+                }
+
+                // If there's an auction update for a bid higher than ours, we can assume our bid was outbid
+                if (event.auction_highest_bid > context.item!.priceUsd) {
+                    cancelListeners();
+
+                    reject(new SilentError('Bid was outbid by another user.'));
+                }
+            });
+        };
+
+        plugin.account!.tradingSocket.on(
+            'trade_status',
+            handleTradeStatusEvent,
+        );
+        plugin.account!.tradingSocket.on(
+            'auction_update',
+            handleAuctionUpdateEvent,
+        );
+    });
+}
+
 export async function withdraw() {
     const context = useContext();
 
     const plugin = context.bot.plugins['csgoempire'] as CSGOEmpirePlugin;
 
     try {
-        const withdrawRes = await plugin.account!.makeWithdrawal(
-            context.event.id,
-        );
+        if (context.item?.isAuction) {
+            return withdrawUsingBid();
+        } else {
+            const withdrawRes = await plugin.account!.makeWithdrawal(
+                context.event.id,
+            );
 
-        const withdrawal = await createWithdrawal({
-            marketplaceId: withdrawRes.data.id,
-        });
+            const withdrawal = await createWithdrawal({
+                marketplaceId: withdrawRes.data.id.toString(),
+            });
 
-        context.withdrawal = withdrawal;
+            context.withdrawal = withdrawal;
 
-        return withdrawal;
+            return withdrawal;
+        }
     } catch (err) {
         throw new SilentError('Failed to withdraw item', err);
     }

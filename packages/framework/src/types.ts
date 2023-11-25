@@ -20,7 +20,7 @@ export interface ItemOptions {
     marketId: string | number;
     priceUsd: number;
     assetId?: string;
-    auction?: Auction;
+    auction?: Auction | null;
 }
 
 export interface Pipeline {

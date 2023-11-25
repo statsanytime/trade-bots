@@ -127,7 +127,7 @@ export async function withdraw() {
         );
 
         const withdrawal = await createWithdrawal({
-            marketplaceId: withdrawRes.data.listing.id,
+            marketplaceId: withdrawRes.data.listing.id.toString(),
         });
 
         context.withdrawal = withdrawal;

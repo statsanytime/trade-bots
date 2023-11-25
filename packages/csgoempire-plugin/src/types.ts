@@ -58,6 +58,7 @@ export enum CSGOEmpireTradeStatus {
 type CSGOEmpireItem = {
     market_name: string;
     market_value: number;
+    asset_id?: number | null;
 };
 
 export type CSGOEmpireWithdrawalStatus = {
@@ -66,7 +67,7 @@ export type CSGOEmpireWithdrawalStatus = {
         id: number;
         total_value: number;
         item_id: number;
-        item: CSGOEmpireItem;
+        item: Omit<CSGOEmpireItem, 'asset_id'>;
         status: CSGOEmpireTradeStatus.Confirming;
         status_message: 'Confirming';
         tradeoffer_id: number;
@@ -88,7 +89,7 @@ export type CSGOEmpireWithdrawalSendingStatus = {
         id: number;
         item_id: number;
         tradeoffer_id: number;
-        item: CSGOEmpireItem;
+        item: Omit<CSGOEmpireItem, 'asset_id'>;
         total_value: number;
     };
 };
@@ -107,7 +108,7 @@ export type CSGOEmpireWithdrawalSentStatus = {
         id: number;
         item_id: number;
         tradeoffer_id: number;
-        item: CSGOEmpireItem;
+        item: Omit<CSGOEmpireItem, 'asset_id'>;
         total_value: number;
     };
 };
@@ -120,7 +121,7 @@ export type CSGOEmpireWithdrawalCompletedStatus = {
         id: number;
         item_id: number;
         tradeoffer_id: number;
-        item: CSGOEmpireItem;
+        item: Omit<CSGOEmpireItem, 'asset_id'>;
         total_value: number;
     };
 };
@@ -141,11 +142,7 @@ export type CSGOEmpireErroredStatus = {
 export type CSGOEmpireDepositStatus = {
     type: 'deposit';
     data: {
-        item: {
-            market_name: string;
-            market_value: number;
-            asset_id: number;
-        };
+        item: CSGOEmpireItem;
         status: CSGOEmpireTradeStatus.Confirming;
         status_message: 'Confirming';
         tradeoffer_id: number;
@@ -157,11 +154,7 @@ export type CSGOEmpireDepositStatus = {
 export type CSGOEmpireDepositSendingStatus = {
     type: 'deposit';
     data: {
-        item: {
-            market_name: string;
-            market_value: number;
-            asset_id: number;
-        };
+        item: CSGOEmpireItem;
         status: CSGOEmpireTradeStatus.Sending;
         status_message: 'Sending';
         metadata: {
@@ -191,11 +184,7 @@ export type CSGOEmpireDepositSendingStatus = {
 export type CSGOEmpireDepositSentStatus = {
     type: 'deposit';
     data: {
-        item: {
-            market_name: string;
-            market_value: number;
-            asset_id: number;
-        };
+        item: CSGOEmpireItem;
         status: CSGOEmpireTradeStatus.Sent;
         status_message: 'Sent';
         metadata: {
@@ -213,11 +202,7 @@ export type CSGOEmpireDepositSentStatus = {
 export type CSGOEmpireDepositCompletedStatus = {
     type: 'deposit';
     data: {
-        item: {
-            market_name: string;
-            market_value: number;
-            asset_id: number;
-        };
+        item: CSGOEmpireItem;
         status: CSGOEmpireTradeStatus.Completed;
         status_message: 'Completed';
         id: number;

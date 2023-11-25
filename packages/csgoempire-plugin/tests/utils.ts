@@ -13,6 +13,9 @@ export function mockCSGOEmpire() {
             on: vi.fn((event, cb) => {
                 listeners[`${key}:${event}`] = cb;
             }),
+            off: vi.fn((event, cb) => {
+                delete listeners[`${key}:${event}`];
+            }),
         };
 
         this.sockets[key] = sockets[key];
@@ -22,9 +25,12 @@ export function mockCSGOEmpire() {
 
     const makeWithdrawalSpy = vi.spyOn(CSGOEmpire.prototype, 'makeWithdrawal');
 
+    const placeBidSpy = vi.spyOn(CSGOEmpire.prototype, 'placeBid');
+
     return {
         listeners,
         sockets,
         makeWithdrawalSpy,
+        placeBidSpy,
     };
 }

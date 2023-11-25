@@ -6,6 +6,7 @@ import {
     scheduleDeposit as frameworkScheduleDeposit,
     useContext,
     removeScheduledDeposit,
+    Item,
 } from '@statsanytime/trade-bots';
 import Big from 'big.js';
 import { createFetch } from 'ofetch';
@@ -79,14 +80,14 @@ export async function deposit(scheduledDeposit: ScheduledDeposit) {
         },
     );
 
+    const newItem = structuredClone(context.item!);
+    newItem.priceUsd = scheduledDeposit.amountUsd;
+
     const deposit = new Deposit({
         marketplace: MARKETPLACE,
         marketplaceId: depositRes.id,
         amountUsd: scheduledDeposit.amountUsd,
-        item: {
-            ...context.item!,
-            priceUsd: scheduledDeposit.amountUsd,
-        },
+        item: newItem,
     });
 
     await appendStorageItem(context.bot.storage, 'deposits', deposit);

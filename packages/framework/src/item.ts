@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 import { Auction, ItemOptions } from './types.js';
 
 export class Item {
@@ -13,5 +14,13 @@ export class Item {
         this.priceUsd = options.priceUsd;
         this.assetId = options.assetId;
         this.auction = options.auction ?? null;
+    }
+
+    get isAuction() {
+        if (!this.auction) {
+            return false;
+        }
+
+        return dayjs(this.auction.endsAt).isAfter(dayjs());
     }
 }

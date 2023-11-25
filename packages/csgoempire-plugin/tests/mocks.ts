@@ -1,7 +1,11 @@
 import { rest } from 'msw';
+import {
+    CSGOEmpireTradeStatus,
+    CSGOEmpireTradeStatusEvent,
+} from '../src/types';
 
 export const newItemEvent = {
-    auction_ends_at: 1695323751,
+    auction_ends_at: null,
     auction_highest_bid: null,
     auction_highest_bidder: null,
     auction_number_of_bids: 0,
@@ -44,10 +48,11 @@ export const auctionUpdateEvent = {
     auction_highest_bid: 11000,
     auction_highest_bidder: 1,
     auction_number_of_bids: 1,
-    auction_ends_at: 1695323751,
+    // Now + 3 minutes
+    auction_ends_at: Date.now() / 1000 + 180,
 };
 
-export const depositTradeStatusEvent = {
+export const depositTradeStatusEvent: CSGOEmpireTradeStatusEvent = {
     type: 'deposit',
     data: {
         item: {
@@ -60,6 +65,22 @@ export const depositTradeStatusEvent = {
         tradeoffer_id: 1,
         id: 1,
         item_id: 1,
+    },
+};
+
+export const withdrawTradeStatusEvent: CSGOEmpireTradeStatusEvent = {
+    type: 'withdrawal',
+    data: {
+        item: {
+            market_name: 'StatTrak™ AK-47 | Aquamarine Revenge (Well-Worn)',
+            market_value: 51.43,
+        },
+        status: CSGOEmpireTradeStatus.Confirming,
+        status_message: 'Confirming',
+        tradeoffer_id: 1,
+        id: 1,
+        item_id: 1,
+        total_value: 51.43,
     },
 };
 
@@ -116,6 +137,18 @@ export const mswWithdraw = rest.post(
                 data: {
                     id: 1,
                 },
+            }),
+        );
+    },
+);
+
+export const mswBid = rest.post(
+    'https://csgoempire.com/api/v2/trading/deposit/:id/bid',
+    async (req, res, ctx) => {
+        return res(
+            // This response is incomplete, but it doesn't matter for the test
+            ctx.json({
+                success: true,
             }),
         );
     },
