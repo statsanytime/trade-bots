@@ -195,6 +195,7 @@ describe('deposit test', () => {
                     marketId: 'test',
                     marketName: 'USP-S | Kill Confirmed (Minimal Wear)',
                     priceUsd: 68.45,
+                    auction: null,
                 },
                 madeAt: expect.any(String),
                 marketplace: 'csgofloat',

@@ -17,6 +17,7 @@ import Big from 'big.js';
 import consola from 'consola';
 import { CSGOEmpire } from 'csgoempire-wrapper';
 import {
+    CSGOEmpireAuctionUpdateEvent,
     CSGOEmpireDepositStatus,
     CSGOEmpireNewItemEvent,
     CSGOEmpirePluginOptions,
@@ -44,6 +45,8 @@ class CSGOEmpirePlugin implements Plugin {
     options: CSGOEmpirePluginOptions;
 
     account: CSGOEmpire | null;
+
+    withdrawalItems: Record<number, Item> = {};
 
     constructor(options: CSGOEmpirePluginOptions) {
         this.options = options;
@@ -103,7 +106,17 @@ class CSGOEmpirePlugin implements Plugin {
                         marketId: event.id,
                         marketName: event.market_name,
                         priceUsd: coinsToUsd(event.market_value / 100),
+                        auction: {
+                            highestBid: event.auction_highest_bid,
+                            highestBidder: event.auction_highest_bidder,
+                            endsAt: event.auction_ends_at
+                                ? new Date(event.auction_ends_at * 1000)
+                                : null,
+                            bidCount: event.auction_number_of_bids,
+                        },
                     });
+
+                    this.withdrawalItems[event.id] = item;
 
                     const newContext = {
                         ...contextData,
@@ -122,11 +135,79 @@ class CSGOEmpirePlugin implements Plugin {
                             handleError(err);
                         }
                     });
+
+                    // Clear the item from the withdrawal items after 5 minutes, as we won't need it anymore
+                    // Auctions end after 3 minutes, so this should be enough time
+                    // We might need it for something else in the future, so we might need to revisit this
+                    setTimeout(
+                        () => {
+                            delete this.withdrawalItems[event.id];
+                        },
+                        5 * 60 * 1000,
+                    );
                 });
             },
         );
 
-        // TODO: Also listen for auction_update
+        this.account!.tradingSocket.on(
+            'auction_update',
+            (
+                events:
+                    | CSGOEmpireAuctionUpdateEvent
+                    | CSGOEmpireAuctionUpdateEvent[],
+            ) => {
+                const eventList = Array.isArray(events) ? events : [events];
+
+                eventList.forEach((event) => {
+                    const item = this.withdrawalItems[event.id];
+
+                    if (!item) {
+                        return;
+                    }
+
+                    const highestBidUsd = new Big(
+                        coinsToUsd(event.auction_highest_bid / 100),
+                    )
+                        .round(2)
+                        .toNumber();
+
+                    this.withdrawalItems[event.id].auction = {
+                        highestBid: highestBidUsd,
+                        highestBidder: event.auction_highest_bidder,
+                        endsAt: event.auction_ends_at
+                            ? new Date(event.auction_ends_at * 1000)
+                            : null,
+                        bidCount: event.auction_number_of_bids,
+                    };
+
+                    // The new price is the next bid, so 1% more than the current highest bid
+                    this.withdrawalItems[event.id].priceUsd = new Big(
+                        highestBidUsd,
+                    )
+                        .times(1.01)
+                        .round(2)
+                        .toNumber();
+
+                    const newContext = {
+                        ...contextData,
+                        item: this.withdrawalItems[event.id],
+                        event,
+                        marketplace: MARKETPLACE,
+                    };
+
+                    context.call(newContext, async () => {
+                        try {
+                            await callContextHook(
+                                'csgoempire:item-buyable',
+                                item,
+                            );
+                        } catch (err) {
+                            handleError(err);
+                        }
+                    });
+                });
+            },
+        );
     }
 }
 

@@ -1,5 +1,5 @@
 export interface CSGOEmpireNewItemEvent {
-    auction_ends_at: null | number;
+    auction_ends_at: null | number; // timestamp in seconds
     auction_highest_bid: null | number;
     auction_highest_bidder: null | number;
     auction_number_of_bids: number;
@@ -33,6 +33,15 @@ export interface CSGOEmpireNewItemEvent {
         sub_type: string;
         rarity: string;
     };
+}
+
+export interface CSGOEmpireAuctionUpdateEvent {
+    id: number;
+    above_recommended_price: number;
+    auction_highest_bid: number;
+    auction_highest_bidder: number;
+    auction_number_of_bids: number;
+    auction_ends_at: number; // timestamp in seconds
 }
 
 export enum CSGOEmpireTradeStatus {

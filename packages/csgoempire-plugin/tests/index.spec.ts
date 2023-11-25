@@ -32,6 +32,7 @@ import {
     mswUserInventory,
     mswWithdraw,
     depositTradeStatusEvent,
+    auctionUpdateEvent,
 } from './mocks.js';
 
 const mswServer = setupServer();
@@ -48,6 +49,8 @@ describe('CSGOEmpire Plugin', () => {
     afterEach(() => {
         vi.restoreAllMocks();
         mswServer.resetHandlers();
+
+        testStorage.clear();
     });
 
     afterAll(() => {
@@ -144,6 +147,12 @@ describe('CSGOEmpire Plugin', () => {
                     marketId: 1,
                     marketName: 'USP-S | Kill Confirmed (Minimal Wear)',
                     priceUsd: 65.187478500172,
+                    auction: {
+                        bidCount: 0,
+                        endsAt: expect.any(String),
+                        highestBid: null,
+                        highestBidder: null,
+                    },
                 },
                 madeAt: expect.any(String),
                 marketplace: 'csgoempire',
@@ -347,5 +356,78 @@ describe('CSGOEmpire Plugin', () => {
         );
 
         expect(await testStorage.getItem('scheduled-deposits')).toEqual([]);
+    });
+
+    test('auction update works', async () => {
+        mswServer.use(mswWithdraw);
+
+        const bot = createBot({
+            name: 'test',
+            pipeline: createPipeline('test', function () {
+                listen('csgoempire:item-buyable', function (item) {
+                    if (item.priceUsd === 68.25) {
+                        withdraw();
+                    }
+                });
+            }),
+            plugins: [
+                createCSGOEmpirePlugin({
+                    apiKey: 'testApiKey',
+                }),
+            ],
+            storage: testStorage,
+        });
+
+        startBots([bot]);
+
+        await flushPromises();
+
+        expect(CSGOEmpireMock.sockets.trading.on).toHaveBeenCalledWith(
+            'new_item',
+            expect.any(Function),
+        );
+
+        expect(CSGOEmpireMock.sockets.trading.on).toHaveBeenCalledWith(
+            'auction_update',
+            expect.any(Function),
+        );
+
+        await CSGOEmpireMock.listeners['trading:new_item'](newItemEvent);
+
+        await flushPromises();
+
+        expect(CSGOEmpireMock.makeWithdrawalSpy).not.toHaveBeenCalled();
+        expect(await testStorage.getItem('withdrawals')).toEqual(null);
+
+        await CSGOEmpireMock.listeners['trading:auction_update'](
+            auctionUpdateEvent,
+        );
+
+        await flushPromises();
+
+        expect(CSGOEmpireMock.makeWithdrawalSpy).toHaveBeenCalledWith(
+            newItemEvent.id,
+        );
+
+        expect(await testStorage.getItem('withdrawals')).toEqual([
+            {
+                amountUsd: 68.25,
+                id: expect.any(String),
+                item: {
+                    marketId: 1,
+                    marketName: 'USP-S | Kill Confirmed (Minimal Wear)',
+                    priceUsd: 68.25,
+                    auction: {
+                        bidCount: 1,
+                        endsAt: expect.any(String),
+                        highestBid: 67.57,
+                        highestBidder: 1,
+                    },
+                },
+                madeAt: expect.any(String),
+                marketplace: 'csgoempire',
+                marketplaceId: 1,
+            },
+        ]);
     });
 });

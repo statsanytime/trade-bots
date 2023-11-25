@@ -38,6 +38,15 @@ export const newItemEvent = {
     },
 };
 
+export const auctionUpdateEvent = {
+    id: 1,
+    above_recommended_price: 0,
+    auction_highest_bid: 11000,
+    auction_highest_bidder: 1,
+    auction_number_of_bids: 1,
+    auction_ends_at: 1695323751,
+};
+
 export const depositTradeStatusEvent = {
     type: 'deposit',
     data: {

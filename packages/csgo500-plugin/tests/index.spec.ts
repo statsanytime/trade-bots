@@ -157,6 +157,7 @@ describe('CSGO500 Plugin', () => {
                 amountUsd: 10.696278511404563,
                 id: expect.any(String),
                 item: {
+                    auction: null,
                     marketId: '654a9048383f113fc528188c',
                     marketName: 'M4A4 | In Living Color (Minimal Wear)',
                     priceUsd: 10.696278511404563,
