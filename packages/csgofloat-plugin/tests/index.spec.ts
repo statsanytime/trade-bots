@@ -21,7 +21,11 @@ import {
     appendStorageItem,
     checkScheduledDeposits,
 } from '@statsanytime/trade-bots';
-import { testStorage, flushPromises, onCustomEvent } from '@statsanytime/trade-bots-shared';
+import {
+    testStorage,
+    flushPromises,
+    onCustomEvent,
+} from '@statsanytime/trade-bots-shared';
 
 const mswServer = setupServer();
 
@@ -82,7 +86,7 @@ describe('deposit test', () => {
                 marketplace: 'csgoempire',
             },
             async () => {
-                await bot.listeners['withdraw-event'].forEach(fn => fn(item));
+                await bot.listeners['withdraw-event'].forEach((fn) => fn(item));
             },
         );
 

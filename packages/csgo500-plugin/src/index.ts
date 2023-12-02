@@ -1,9 +1,6 @@
 import {
-    Item,
     Plugin,
     SilentError,
-    getContext,
-    handleError,
     useContext,
     createWithdrawal,
 } from '@statsanytime/trade-bots';
@@ -12,19 +9,18 @@ import io, { Socket } from 'socket.io-client-v4';
 import jwt from 'jsonwebtoken';
 import type {
     CSGO500Listing,
-    CSGO500MarketListingUpdateEvent,
     CSGO500PluginOptions,
 } from './types.js';
 
 const BUX_TO_USD_RATE = 1666;
 
-function buxToUsd(bux: number) {
+export function buxToUsd(bux: number) {
     return bux / BUX_TO_USD_RATE;
 }
 
-const MARKETPLACE = 'csgo500';
+export const MARKETPLACE = 'csgo500';
 
-class CSGO500Plugin implements Plugin {
+export class CSGO500Plugin implements Plugin {
     name = 'csgo500';
 
     apiKey: string;
@@ -90,47 +86,8 @@ export async function withdraw() {
     }
 }
 
-export function onItemBuyable(handler: (item: Item) => void | Promise<void>) {
-    const context = getContext();
-    const contextData = context.use();
-
-    const plugin = contextData.bot.plugins['csgo500'] as CSGO500Plugin;
-
-    contextData.bot.registerListener('csgoempire:item-buyable', handler);
-
-    if (!plugin.socket) {
-        throw new Error('Socket is not connected');
-    }
-
-    plugin.socket.on(
-        'market_listing_update',
-        (event: CSGO500MarketListingUpdateEvent) => {
-            const item = new Item({
-                marketId: event.listing.id,
-                marketName: event.listing.name,
-                priceUsd: buxToUsd(event.listing.value),
-            });
-
-            const newContext = {
-                ...contextData,
-                item,
-                event,
-                marketplace: MARKETPLACE,
-            };
-
-            context.call(newContext, async () => {
-                try {
-                    await handler(item);
-                } catch (err) {
-                    handleError(err);
-                }
-            });
-        },
-    );
-
-    // TODO: Also listen for market_listing_auction_update
-}
-
 export function createCSGO500Plugin(options: CSGO500PluginOptions) {
     return new CSGO500Plugin(options);
 }
+
+export * from './listeners.js';

@@ -23,7 +23,11 @@ import {
     getContext,
     handleError,
 } from '@statsanytime/trade-bots';
-import { testStorage, flushPromises, onCustomEvent } from '@statsanytime/trade-bots-shared';
+import {
+    testStorage,
+    flushPromises,
+    onCustomEvent,
+} from '@statsanytime/trade-bots-shared';
 import { mswItemPrices } from './mocks.js';
 
 const mswServer = setupServer();
@@ -97,7 +101,7 @@ describe('Pricempire Plugin', () => {
             },
             async () => {
                 try {
-                    bot.listeners['random-event'].forEach(fn => fn(item));
+                    bot.listeners['random-event'].forEach((fn) => fn(item));
                 } catch (err) {
                     handleError(err);
                 }
@@ -153,7 +157,7 @@ describe('Pricempire Plugin', () => {
             },
             async () => {
                 try {
-                    bot.listeners['random-event'].forEach(fn => fn(item));
+                    bot.listeners['random-event'].forEach((fn) => fn(item));
                 } catch (err) {
                     handleError(err);
                 }
@@ -209,7 +213,7 @@ describe('Pricempire Plugin', () => {
             },
             async () => {
                 try {
-                    bot.listeners['random-event'].forEach(fn => fn(item));
+                    bot.listeners['random-event'].forEach((fn) => fn(item));
                 } catch (err) {
                     handleError(err);
                 }

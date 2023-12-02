@@ -11,11 +11,7 @@ import {
 import { setupServer } from 'msw/node';
 import { rest } from 'msw';
 import { createCSGO500Plugin, withdraw, onItemBuyable } from '../src/index.js';
-import {
-    createPipeline,
-    startBots,
-    createBot,
-} from '@statsanytime/trade-bots';
+import { createPipeline, startBots, createBot } from '@statsanytime/trade-bots';
 import { testStorage, flushPromises } from '@statsanytime/trade-bots-shared';
 import io from 'socket.io-client-v4';
 import { marketListingUpdateEvent } from './mocks.js';
