@@ -54,3 +54,7 @@ export interface ScheduledDeposit {
 ```
 
 Under the hood, `scheduleDeposit` uses this function to make the deposit request once the item is tradable.
+
+### `onItemBuyable`
+
+Listen for items that become buyable. This function takes a single callback argument.

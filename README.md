@@ -21,12 +21,12 @@ Trade bots should be simple. It should be possible to write code like this.
 ```javascript
 import { createBot, createPipeline, listen } from '@statsanytime/trade-bots';
 import { createCSGOFloatPlugin, scheduleDeposit } from '@statsanytime/trade-bots-csgofloat';
-import { createCSGOEmpirePlugin, withdraw } from '@statsanytime/trade-bots-csgoempire';
+import { createCSGOEmpirePlugin, withdraw, onItemBuyable } from '@statsanytime/trade-bots-csgoempire';
 import { createSteamPlugin, acceptTradeOffer } from '@statsanytime/trade-bots-steam';
 import { createPricempirePlugin, getPrice } from '@statsanytime/trade-bots-pricempire';
 
 const RedepositorPipeline = createPipeline('Redepositor', function () {
-    listen('csgoempire:item-buyable', async (item) => {
+    onItemBuyable(async (item) => {
         if (item.priceUsd <= getPrice('buff_buy')) {
             await withdraw();
 

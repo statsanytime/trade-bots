@@ -28,3 +28,7 @@ export interface CSGO500PluginOptions {
 ### `withdraw`
 
 Withdraws the item currently in the context (for example, the item that was just listed). This function does not take any arguments.
+
+### `onItemBuyable`
+
+Listen for items that become buyable. This function takes a single callback argument.

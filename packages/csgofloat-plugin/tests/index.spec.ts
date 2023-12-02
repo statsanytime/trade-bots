@@ -15,15 +15,13 @@ import {
     createPipeline,
     startBots,
     createBot,
-    listen,
     getContext,
     Item,
-    callContextHook,
     Withdrawal,
     appendStorageItem,
     checkScheduledDeposits,
 } from '@statsanytime/trade-bots';
-import { testStorage, flushPromises } from '@statsanytime/trade-bots-shared';
+import { testStorage, flushPromises, onCustomEvent } from '@statsanytime/trade-bots-shared';
 
 const mswServer = setupServer();
 
@@ -40,7 +38,7 @@ describe('deposit test', () => {
         const bot = createBot({
             name: 'test',
             pipeline: createPipeline('test', function () {
-                listen('withdraw-event', async function (item) {
+                onCustomEvent('withdraw-event', async function (item) {
                     await scheduleDeposit({
                         amountUsd: item.priceUsd * 1.05,
                         type: 'auction',
@@ -84,7 +82,7 @@ describe('deposit test', () => {
                 marketplace: 'csgoempire',
             },
             async () => {
-                await callContextHook('withdraw-event', item);
+                await bot.listeners['withdraw-event'].forEach(fn => fn(item));
             },
         );
 

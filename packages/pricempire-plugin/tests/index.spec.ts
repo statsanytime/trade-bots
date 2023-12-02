@@ -19,13 +19,11 @@ import {
     createPipeline,
     startBots,
     createBot,
-    listen,
     Item,
     getContext,
-    callContextHook,
     handleError,
 } from '@statsanytime/trade-bots';
-import { testStorage, flushPromises } from '@statsanytime/trade-bots-shared';
+import { testStorage, flushPromises, onCustomEvent } from '@statsanytime/trade-bots-shared';
 import { mswItemPrices } from './mocks.js';
 
 const mswServer = setupServer();
@@ -48,7 +46,7 @@ describe('Pricempire Plugin', () => {
         const bot = createBot({
             name: 'test',
             pipeline: createPipeline('test', () => {
-                listen('random-event', () => {
+                onCustomEvent('random-event', () => {
                     if (getPrice('buff_buy') === 10) {
                         withdrawMock();
                     }
@@ -99,7 +97,7 @@ describe('Pricempire Plugin', () => {
             },
             async () => {
                 try {
-                    await callContextHook('random-event', item);
+                    bot.listeners['random-event'].forEach(fn => fn(item));
                 } catch (err) {
                     handleError(err);
                 }
@@ -119,7 +117,7 @@ describe('Pricempire Plugin', () => {
         const bot = createBot({
             name: 'test',
             pipeline: createPipeline('test', () => {
-                listen('random-event', () => {
+                onCustomEvent('random-event', () => {
                     if (getPricePercentage('buff_buy') <= 98) {
                         withdrawMock();
                     }
@@ -155,7 +153,7 @@ describe('Pricempire Plugin', () => {
             },
             async () => {
                 try {
-                    await callContextHook('random-event', item);
+                    bot.listeners['random-event'].forEach(fn => fn(item));
                 } catch (err) {
                     handleError(err);
                 }
@@ -175,7 +173,7 @@ describe('Pricempire Plugin', () => {
         const bot = createBot({
             name: 'test',
             pipeline: createPipeline('test', () => {
-                listen('random-event', () => {
+                onCustomEvent('random-event', () => {
                     if (getPricePercentage('buff_buy') <= 98) {
                         withdrawMock();
                     }
@@ -211,7 +209,7 @@ describe('Pricempire Plugin', () => {
             },
             async () => {
                 try {
-                    await callContextHook('random-event', item);
+                    bot.listeners['random-event'].forEach(fn => fn(item));
                 } catch (err) {
                     handleError(err);
                 }

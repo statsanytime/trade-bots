@@ -55,14 +55,4 @@ Alternatively, the `stattb` CLI can be used to do this.
 startBots([bot1, bot2, ...]);
 ```
 
-### `listen`
-
-Can be used for listening for events from bots inside the pipeline context/logic.
-
-```typescript
-listen('event-name', (eventData) => {
-    // Event handler
-});
-```
-
 There are quite a few available functions on top of these, but these are the stable ones for the time being. Feel free to play around with the more internal functions, but be aware that they might change in the future.

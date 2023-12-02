@@ -7,7 +7,6 @@ import {
     handleError,
     SilentError,
     ScheduledDeposit,
-    callContextHook,
     createWithdrawal,
     Deposit,
     appendStorageItem,
@@ -65,16 +64,6 @@ class CSGOEmpirePlugin implements Plugin {
             this.account!.tradingSocket.emit('filters', {});
         });
 
-        context.bot.hooks.hook('pipeline:listen', (event: string) => {
-            const listeners = {
-                'csgoempire:item-buyable': () => this.listenForItemBuyable(),
-            } as Record<string, () => void>;
-
-            if (event in listeners) {
-                listeners[event]();
-            }
-        });
-
         context.bot.hooks.hook(
             'deposit-redepositable',
             async (depositObject: ScheduledDeposit) => {
@@ -89,124 +78,6 @@ class CSGOEmpirePlugin implements Plugin {
                     consola.error(err);
                     consola.error('Failed to deposit item', depositObject);
                 }
-            },
-        );
-    }
-
-    listenForItemBuyable() {
-        const context = getContext();
-        const contextData = context.use();
-
-        this.account!.tradingSocket.on(
-            'new_item',
-            (events: CSGOEmpireNewItemEvent | CSGOEmpireNewItemEvent[]) => {
-                const eventList = Array.isArray(events) ? events : [events];
-
-                eventList.forEach((event) => {
-                    const item = new Item({
-                        marketId: event.id,
-                        marketName: event.market_name,
-                        priceUsd: coinsToUsd(event.market_value / 100),
-                        auction: {
-                            highestBid: event.auction_highest_bid,
-                            highestBidder: event.auction_highest_bidder,
-                            endsAt: event.auction_ends_at
-                                ? new Date(event.auction_ends_at * 1000)
-                                : null,
-                            bidCount: event.auction_number_of_bids,
-                        },
-                    });
-
-                    this.withdrawalItems[event.id] = item;
-
-                    const newContext = {
-                        ...contextData,
-                        item,
-                        event,
-                        marketplace: MARKETPLACE,
-                    };
-
-                    context.call(newContext, async () => {
-                        try {
-                            await callContextHook(
-                                'csgoempire:item-buyable',
-                                item,
-                            );
-                        } catch (err) {
-                            handleError(err);
-                        }
-                    });
-
-                    // Clear the item from the withdrawal items after 5 minutes, as we won't need it anymore
-                    // Auctions end after 3 minutes, so this should be enough time
-                    // We might need it for something else in the future, so we might need to revisit this
-                    setTimeout(
-                        () => {
-                            delete this.withdrawalItems[event.id];
-                        },
-                        5 * 60 * 1000,
-                    );
-                });
-            },
-        );
-
-        this.account!.tradingSocket.on(
-            'auction_update',
-            (
-                events:
-                    | CSGOEmpireAuctionUpdateEvent
-                    | CSGOEmpireAuctionUpdateEvent[],
-            ) => {
-                const eventList = Array.isArray(events) ? events : [events];
-
-                eventList.forEach((event) => {
-                    const item = this.withdrawalItems[event.id];
-
-                    if (!item) {
-                        return;
-                    }
-
-                    const highestBidUsd = new Big(
-                        coinsToUsd(event.auction_highest_bid / 100),
-                    )
-                        .round(2)
-                        .toNumber();
-
-                    this.withdrawalItems[event.id].auction = {
-                        highestBid: highestBidUsd,
-                        highestBidder: event.auction_highest_bidder,
-                        endsAt: event.auction_ends_at
-                            ? new Date(event.auction_ends_at * 1000)
-                            : null,
-                        bidCount: event.auction_number_of_bids,
-                    };
-
-                    // The new price is the next bid, so 1% more than the current highest bid
-                    this.withdrawalItems[event.id].priceUsd = new Big(
-                        highestBidUsd,
-                    )
-                        .times(1.01)
-                        .round(2)
-                        .toNumber();
-
-                    const newContext = {
-                        ...contextData,
-                        item: this.withdrawalItems[event.id],
-                        event,
-                        marketplace: MARKETPLACE,
-                    };
-
-                    context.call(newContext, async () => {
-                        try {
-                            await callContextHook(
-                                'csgoempire:item-buyable',
-                                item,
-                            );
-                        } catch (err) {
-                            handleError(err);
-                        }
-                    });
-                });
             },
         );
     }
@@ -462,6 +333,122 @@ export async function withdraw() {
     } catch (err) {
         throw new SilentError('Failed to withdraw item', err);
     }
+}
+
+export function onItemBuyable(handler: (item: Item) => void | Promise<void>) {
+    const context = getContext();
+    const contextData = context.use();
+
+    const plugin = contextData.bot.plugins['csgoempire'] as CSGOEmpirePlugin;
+
+    contextData.bot.registerListener('csgoempire:item-buyable', handler);
+
+    plugin.account!.tradingSocket.on(
+        'new_item',
+        (events: CSGOEmpireNewItemEvent | CSGOEmpireNewItemEvent[]) => {
+            const eventList = Array.isArray(events) ? events : [events];
+
+            eventList.forEach((event) => {
+                const item = new Item({
+                    marketId: event.id,
+                    marketName: event.market_name,
+                    priceUsd: coinsToUsd(event.market_value / 100),
+                    auction: {
+                        highestBid: event.auction_highest_bid,
+                        highestBidder: event.auction_highest_bidder,
+                        endsAt: event.auction_ends_at
+                            ? new Date(event.auction_ends_at * 1000)
+                            : null,
+                        bidCount: event.auction_number_of_bids,
+                    },
+                });
+
+                plugin.withdrawalItems[event.id] = item;
+
+                const newContext = {
+                    ...contextData,
+                    item,
+                    event,
+                    marketplace: MARKETPLACE,
+                };
+
+                context.call(newContext, async () => {
+                    try {
+                        await handler(item);
+                    } catch (err) {
+                        handleError(err);
+                    }
+                });
+
+                // Clear the item from the withdrawal items after 5 minutes, as we won't need it anymore
+                // Auctions end after 3 minutes, so this should be enough time
+                // We might need it for something else in the future, so we might need to revisit this
+                setTimeout(
+                    () => {
+                        delete plugin.withdrawalItems[event.id];
+                    },
+                    5 * 60 * 1000,
+                );
+            });
+        },
+    );
+
+    plugin.account!.tradingSocket.on(
+        'auction_update',
+        (
+            events:
+                | CSGOEmpireAuctionUpdateEvent
+                | CSGOEmpireAuctionUpdateEvent[],
+        ) => {
+            const eventList = Array.isArray(events) ? events : [events];
+
+            eventList.forEach((event) => {
+                const item = plugin.withdrawalItems[event.id];
+
+                if (!item) {
+                    return;
+                }
+
+                const highestBidUsd = new Big(
+                    coinsToUsd(event.auction_highest_bid / 100),
+                )
+                    .round(2)
+                    .toNumber();
+
+                plugin.withdrawalItems[event.id].auction = {
+                    highestBid: highestBidUsd,
+                    highestBidder: event.auction_highest_bidder,
+                    endsAt: event.auction_ends_at
+                        ? new Date(event.auction_ends_at * 1000)
+                        : null,
+                    bidCount: event.auction_number_of_bids,
+                };
+
+                // The new price is the next bid, so 1% more than the current highest bid
+                plugin.withdrawalItems[event.id].priceUsd = new Big(
+                    highestBidUsd,
+                )
+                    .times(1.01)
+                    .round(2)
+                    .toNumber();
+
+                const newContext = {
+                    ...contextData,
+                    item: plugin.withdrawalItems[event.id],
+                    event,
+                    marketplace: MARKETPLACE,
+                };
+
+                context.call(newContext, async () => {
+                    try {
+                        await handler(item);
+                    } catch (err) {
+                        handleError(err);
+                    }
+                });
+            });
+        },
+    );
 }
 
 export function createCSGOEmpirePlugin(options: CSGOEmpirePluginOptions) {

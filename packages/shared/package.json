@@ -21,6 +21,7 @@
     },
     "author": "Pixel",
     "dependencies": {
+        "@statsanytime/trade-bots": "workspace:^",
         "unstorage": "^1.9.0"
     },
     "devDependencies": {

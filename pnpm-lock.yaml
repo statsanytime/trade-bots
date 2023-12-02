@@ -229,6 +229,9 @@ importers:
 
   packages/shared:
     dependencies:
+      '@statsanytime/trade-bots':
+        specifier: workspace:^1.0.0-alpha.15
+        version: link:../framework
       unstorage:
         specifier: ^1.9.0
         version: 1.9.0

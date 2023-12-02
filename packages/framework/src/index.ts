@@ -29,22 +29,6 @@ export const getContext = () =>
 
 export const useContext = () => getContext().use();
 
-export function listen(
-    event: string,
-    handler: (event: any) => void | Promise<void>,
-) {
-    const context = useContext();
-
-    context.bot.hooks.callHook('pipeline:listen', event);
-    context.bot.hooks.hook(event, handler);
-}
-
-export async function callContextHook(event: string, data: any) {
-    const context = useContext();
-
-    return context.bot.hooks.callHook(event, data);
-}
-
 export async function appendStorageItem(
     storage: Storage,
     key: string,
@@ -204,6 +188,7 @@ export class Bot {
     plugins: Record<string, Plugin>;
     hooks: Hookable;
     storage: Storage;
+    listeners: Record<string, Function[]>;
 
     constructor(options: BotOptions) {
         this.name = options.name;
@@ -219,6 +204,7 @@ export class Bot {
         );
 
         this.hooks = createHooks();
+        this.listeners = {};
 
         this.storage =
             options.storage ??
@@ -235,6 +221,14 @@ export class Bot {
                 .map((plugin) => plugin.boot?.())
                 .filter(Boolean),
         );
+    }
+
+    registerListener(event: string, listener: Function) {
+        if (!this.listeners[event]) {
+            this.listeners[event] = [];
+        }
+
+        this.listeners[event].push(listener);
     }
 }
 

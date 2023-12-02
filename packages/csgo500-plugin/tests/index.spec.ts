@@ -10,12 +10,11 @@ import {
 } from 'vitest';
 import { setupServer } from 'msw/node';
 import { rest } from 'msw';
-import { createCSGO500Plugin, withdraw } from '../src/index.js';
+import { createCSGO500Plugin, withdraw, onItemBuyable } from '../src/index.js';
 import {
     createPipeline,
     startBots,
     createBot,
-    listen,
 } from '@statsanytime/trade-bots';
 import { testStorage, flushPromises } from '@statsanytime/trade-bots-shared';
 import io from 'socket.io-client-v4';
@@ -53,7 +52,7 @@ describe('CSGO500 Plugin', () => {
         const bot = createBot({
             name: 'test',
             pipeline: createPipeline('test', function () {
-                listen('csgo500:item-buyable', listenFn);
+                onItemBuyable(listenFn);
             }),
             plugins: [
                 createCSGO500Plugin({
@@ -121,7 +120,7 @@ describe('CSGO500 Plugin', () => {
         const bot = createBot({
             name: 'test',
             pipeline: createPipeline('test', function () {
-                listen('csgo500:item-buyable', function () {
+                onItemBuyable(function () {
                     withdraw();
                 });
             }),

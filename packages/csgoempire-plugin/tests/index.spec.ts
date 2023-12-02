@@ -13,6 +13,7 @@ import { setupServer } from 'msw/node';
 import { rest } from 'msw';
 import {
     createCSGOEmpirePlugin,
+    onItemBuyable,
     scheduleDeposit,
     withdraw,
 } from '../src/index.js';
@@ -20,7 +21,6 @@ import {
     createPipeline,
     startBots,
     createBot,
-    listen,
     useContext,
     checkScheduledDeposits,
     ScheduledDeposit,
@@ -67,7 +67,7 @@ describe('CSGOEmpire Plugin', () => {
         const bot = createBot({
             name: 'test',
             pipeline: createPipeline('test', function () {
-                listen('csgoempire:item-buyable', listenFn);
+                onItemBuyable(listenFn);
             }),
             plugins: [
                 createCSGOEmpirePlugin({
@@ -113,7 +113,7 @@ describe('CSGOEmpire Plugin', () => {
         const bot = createBot({
             name: 'test',
             pipeline: createPipeline('test', function () {
-                listen('csgoempire:item-buyable', function () {
+                onItemBuyable(function () {
                     withdraw();
                 });
             }),
@@ -172,7 +172,7 @@ describe('CSGOEmpire Plugin', () => {
         const bot = createBot({
             name: 'test',
             pipeline: createPipeline('test', function () {
-                listen('csgoempire:item-buyable', async function () {
+                onItemBuyable(async function () {
                     await withdraw();
 
                     afterWithdrawFn();
@@ -216,7 +216,7 @@ describe('CSGOEmpire Plugin', () => {
         const bot = createBot({
             name: 'test',
             pipeline: createPipeline('test', function () {
-                listen('csgoempire:item-buyable', async function () {
+                onItemBuyable(async function () {
                     await withdraw();
                 });
             }),
@@ -245,7 +245,7 @@ describe('CSGOEmpire Plugin', () => {
         const bot = createBot({
             name: 'test',
             pipeline: createPipeline('test', function () {
-                listen('csgoempire:item-buyable', listenMock);
+                onItemBuyable(listenMock);
             }),
             plugins: [
                 createCSGOEmpirePlugin({
@@ -291,7 +291,7 @@ describe('CSGOEmpire Plugin', () => {
         const bot = createBot({
             name: 'test',
             pipeline: createPipeline('test', () => {
-                listen('csgoempire:item-buyable', async () => {
+                onItemBuyable(async () => {
                     await withdraw();
 
                     // Pretend steam accepted the offer and set the asset id
@@ -369,7 +369,7 @@ describe('CSGOEmpire Plugin', () => {
         const bot = createBot({
             name: 'test',
             pipeline: createPipeline('test', function () {
-                listen('csgoempire:item-buyable', function (item) {
+                onItemBuyable(function (item) {
                     if (item.priceUsd === 68.25) {
                         withdraw();
 
