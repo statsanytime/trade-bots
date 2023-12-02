@@ -10,7 +10,7 @@ import {
     vi,
 } from 'vitest';
 import { setupServer } from 'msw/node';
-import { rest } from 'msw';
+import { http, HttpResponse } from 'msw';
 import {
     createCSGOEmpirePlugin,
     onItemBuyable,
@@ -272,16 +272,14 @@ describe('CSGOEmpire Plugin', () => {
         const depositMock = vi.fn();
 
         mswServer.use(
-            rest.post(
+            http.post(
                 'https://csgoempire.com/api/v2/trading/deposit',
-                async (req, res, ctx) => {
-                    depositMock(await req.json());
+                async ({ request }) => {
+                    depositMock(await request.json());
 
-                    return res(
-                        ctx.json({
-                            success: true,
-                        }),
-                    );
+                    return HttpResponse.json(({
+                        success: true,
+                    }));
                 },
             ),
             mswUserInventory,

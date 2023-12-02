@@ -9,7 +9,7 @@ import {
     vi,
 } from 'vitest';
 import { setupServer } from 'msw/node';
-import { rest } from 'msw';
+import { http, HttpResponse } from 'msw';
 import { createCSGOFloatPlugin, scheduleDeposit } from '../src/index.js';
 import {
     createPipeline,
@@ -116,16 +116,14 @@ describe('deposit test', () => {
         const depositMock = vi.fn();
 
         mswServer.use(
-            rest.post(
+            http.post(
                 'https://csgofloat.com/api/v1/listings',
-                async (req, res, ctx) => {
-                    depositMock(await req.json());
+                async ({ request }) => {
+                    depositMock(await request.json());
 
-                    return res(
-                        ctx.json({
-                            success: true,
-                        }),
-                    );
+                    return HttpResponse.json({
+                        success: true,
+                    });
                 },
             ),
         );

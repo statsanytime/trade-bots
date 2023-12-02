@@ -9,7 +9,7 @@ import {
     vi,
 } from 'vitest';
 import { setupServer } from 'msw/node';
-import { rest } from 'msw';
+import { http, HttpResponse } from 'msw';
 import { createCSGO500Plugin, withdraw, onItemBuyable } from '../src/index.js';
 import { createPipeline, startBots, createBot } from '@statsanytime/trade-bots';
 import { testStorage, flushPromises } from '@statsanytime/trade-bots-shared';
@@ -94,21 +94,19 @@ describe('CSGO500 Plugin', () => {
         const withdrawSpy = vi.fn();
 
         mswServer.use(
-            rest.post(
+            http.post(
                 'https://tradingapi.500.casino/api/v1/market/withdraw',
-                async (req, res, ctx) => {
-                    withdrawSpy(await req.json());
+                async ({ request }) => {
+                    withdrawSpy(await request.json());
 
-                    return res(
-                        ctx.json({
-                            success: true,
-                            data: {
-                                listing: {
-                                    id: 'test',
-                                },
+                    return HttpResponse.json({
+                        success: true,
+                        data: {
+                            listing: {
+                                id: 'test',
                             },
-                        }),
-                    );
+                        },
+                    });
                 },
             ),
         );
