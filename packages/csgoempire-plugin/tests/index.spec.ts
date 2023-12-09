@@ -277,9 +277,9 @@ describe('CSGOEmpire Plugin', () => {
                 async ({ request }) => {
                     depositMock(await request.json());
 
-                    return HttpResponse.json(({
+                    return HttpResponse.json({
                         success: true,
-                    }));
+                    });
                 },
             ),
             mswUserInventory,

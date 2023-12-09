@@ -7,10 +7,7 @@ import {
 import { createFetch } from 'ofetch';
 import io, { Socket } from 'socket.io-client-v4';
 import jwt from 'jsonwebtoken';
-import type {
-    CSGO500Listing,
-    CSGO500PluginOptions,
-} from './types.js';
+import type { CSGO500Listing, CSGO500PluginOptions } from './types.js';
 
 const BUX_TO_USD_RATE = 1666;
 

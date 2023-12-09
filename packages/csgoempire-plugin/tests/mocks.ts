@@ -86,58 +86,61 @@ export const withdrawTradeStatusEvent: CSGOEmpireTradeStatusEvent = {
 
 export const mswUserInventory = http.get(
     'https://csgoempire.com/api/v2/trading/user/inventory',
-    async () => HttpResponse.json({
-        allowUpdate: true,
-        cursor: 'eyJmdWxsX3Bvc2l0aW9uIjo1MCwiX3BvaW50c1RvTmV4dEl0ZW1zIjp0cnVlfQ',
-        data: [
-            {
-                // This is normally returned as a number, but this is a test, so who cares
-                asset_id: 123,
-                created_at: '2023-10-20 14:48:30',
-                custom_price_percentage: null,
-                full_position: 1,
-                icon_url:
-                    '-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXQ9Q1LO5kNoBhSQl-fEv2o1t3QXFR6a1wE4uOkKlFm0qvJd2gSvYS3x9nbwfXyZrqBxDkCvZYmjurEpomlilL6ux07YtuiRwA',
-                id: 1,
-                invalid:
-                    "This item's price is either unstable or not found. Please contact support if you would like to deposit this item.",
-                is_commodity: false,
-                market_name: '5 Year Veteran Coin',
-                market_value: -1,
-                max_auction_value: 0,
-                name_color: 'D2D2D2',
-                position: null,
-                preview_id: null,
-                price_is_unreliable: false,
-                stickers: null,
-                tradable: false,
-                tradelock: false,
-                updated_at: '2023-11-05 19:54:26',
-                wear: null,
-            },
-        ],
-        success: true,
-        totalCount: 533,
-        totalValue: 145073,
-        updatedAt: 1699212970,
-    }),
+    async () =>
+        HttpResponse.json({
+            allowUpdate: true,
+            cursor: 'eyJmdWxsX3Bvc2l0aW9uIjo1MCwiX3BvaW50c1RvTmV4dEl0ZW1zIjp0cnVlfQ',
+            data: [
+                {
+                    // This is normally returned as a number, but this is a test, so who cares
+                    asset_id: 123,
+                    created_at: '2023-10-20 14:48:30',
+                    custom_price_percentage: null,
+                    full_position: 1,
+                    icon_url:
+                        '-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXQ9Q1LO5kNoBhSQl-fEv2o1t3QXFR6a1wE4uOkKlFm0qvJd2gSvYS3x9nbwfXyZrqBxDkCvZYmjurEpomlilL6ux07YtuiRwA',
+                    id: 1,
+                    invalid:
+                        "This item's price is either unstable or not found. Please contact support if you would like to deposit this item.",
+                    is_commodity: false,
+                    market_name: '5 Year Veteran Coin',
+                    market_value: -1,
+                    max_auction_value: 0,
+                    name_color: 'D2D2D2',
+                    position: null,
+                    preview_id: null,
+                    price_is_unreliable: false,
+                    stickers: null,
+                    tradable: false,
+                    tradelock: false,
+                    updated_at: '2023-11-05 19:54:26',
+                    wear: null,
+                },
+            ],
+            success: true,
+            totalCount: 533,
+            totalValue: 145073,
+            updatedAt: 1699212970,
+        }),
 );
 
 export const mswWithdraw = http.post(
     'https://csgoempire.com/api/v2/trading/deposit/:id/withdraw',
     // This response is incomplete, but it doesn't matter for the test
-    async () => HttpResponse.json({
-        success: true,
-        data: {
-            id: 1,
-        },
-    }),
+    async () =>
+        HttpResponse.json({
+            success: true,
+            data: {
+                id: 1,
+            },
+        }),
 );
 
 export const mswBid = http.post(
     'https://csgoempire.com/api/v2/trading/deposit/:id/bid',
     // This response is incomplete, but it doesn't matter for the test
-    async () => HttpResponse.json({
-        success: true,
-    }),
+    async () =>
+        HttpResponse.json({
+            success: true,
+        }),
 );

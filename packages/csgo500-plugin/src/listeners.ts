@@ -1,6 +1,6 @@
-import { Item, getContext, handleError } from "@statsanytime/trade-bots";
-import { CSGO500MarketListingUpdateEvent } from "./types";
-import { CSGO500Plugin, MARKETPLACE, buxToUsd } from ".";
+import { Item, getContext, handleError } from '@statsanytime/trade-bots';
+import { CSGO500MarketListingUpdateEvent } from './types';
+import { CSGO500Plugin, MARKETPLACE, buxToUsd } from '.';
 
 export function onItemBuyable(handler: (item: Item) => void | Promise<void>) {
     const context = getContext();
