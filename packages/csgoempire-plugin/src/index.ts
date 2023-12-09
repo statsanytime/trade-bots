@@ -225,17 +225,12 @@ export async function scheduleDeposit(
     });
 }
 
-async function withdrawUsingBid(): Promise<Withdrawal> {
+function withdrawUsingBid(): Promise<Withdrawal> {
     return new Promise(async (resolve, reject) => {
         const contextObject = getContext();
         const context = useContext();
 
         const plugin = context.bot.plugins['csgoempire'] as CSGOEmpirePlugin;
-
-        await plugin.account!.placeBid(
-            context.item!.marketId as number,
-            context.item!.priceUsd,
-        );
 
         const cancelListeners = () => {
             plugin.account!.tradingSocket.off(
@@ -304,6 +299,18 @@ async function withdrawUsingBid(): Promise<Withdrawal> {
             'auction_update',
             handleAuctionUpdateEvent,
         );
+
+        const bidCoins = new Big(usdToCoins(context.item!.priceUsd))
+            .round(2)
+            .toNumber();
+
+        plugin
+            .account!.placeBid(context.item!.marketId as number, bidCoins)
+            .catch((err) => {
+                cancelListeners();
+
+                reject(err);
+            });
     });
 }
 
@@ -314,7 +321,11 @@ export async function withdraw() {
 
     try {
         if (context.item?.isAuction) {
-            return withdrawUsingBid();
+            const withdrawal = await withdrawUsingBid();
+
+            context.withdrawal = withdrawal;
+
+            return withdrawal;
         } else {
             const withdrawRes = await plugin.account!.makeWithdrawal(
                 context.event.id,

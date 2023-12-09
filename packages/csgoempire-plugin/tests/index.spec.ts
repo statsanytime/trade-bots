@@ -239,6 +239,41 @@ describe('CSGOEmpire Plugin', () => {
         );
     });
 
+    test('no exception is thrown on failed bid', async () => {
+        CSGOEmpireMock.placeBidSpy.mockRejectedValueOnce(
+            new Error('test error'),
+        );
+
+        const bot = createBot({
+            name: 'test',
+            pipeline: createPipeline('test', function () {
+                onItemBuyable(async function () {
+                    await withdraw();
+                });
+            }),
+            plugins: [
+                createCSGOEmpirePlugin({
+                    apiKey: 'testApiKey',
+                }),
+            ],
+            storage: testStorage,
+        });
+
+        startBots([bot]);
+
+        await flushPromises();
+
+        await CSGOEmpireMock.listeners['trading:new_item']({
+            ...newItemEvent,
+            auction_ends_at: Date.now() + 1000 * 60 * 5,
+        });
+
+        expect(CSGOEmpireMock.placeBidSpy).toHaveBeenCalledWith(
+            newItemEvent.id,
+            106.12,
+        );
+    });
+
     test('csgoempire price usd works', async () => {
         const listenMock = vi.fn();
 
@@ -412,7 +447,7 @@ describe('CSGOEmpire Plugin', () => {
 
         expect(CSGOEmpireMock.placeBidSpy).toHaveBeenCalledWith(
             newItemEvent.id,
-            68.25,
+            111.11,
         );
 
         await flushPromises();
