@@ -1,7 +1,7 @@
 {
     "name": "@statsanytime/trade-bots",
     "description": "Simple framework for building CS trade-bots!",
-    "version": "1.0.0-alpha.15",
+    "version": "1.0.0-alpha.16",
     "type": "module",
     "exports": {
         ".": {
