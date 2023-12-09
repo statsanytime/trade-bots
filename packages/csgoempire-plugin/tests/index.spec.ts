@@ -147,7 +147,7 @@ describe('CSGOEmpire Plugin', () => {
                 amountUsd: 65.187478500172,
                 id: expect.any(String),
                 item: {
-                    marketId: 1,
+                    marketId: 11,
                     marketName: 'USP-S | Kill Confirmed (Minimal Wear)',
                     priceUsd: 65.187478500172,
                     auction: {
@@ -467,7 +467,7 @@ describe('CSGOEmpire Plugin', () => {
                 amountUsd: 68.25,
                 id: expect.any(String),
                 item: {
-                    marketId: 1,
+                    marketId: 11,
                     marketName: 'USP-S | Kill Confirmed (Minimal Wear)',
                     priceUsd: 68.25,
                     auction: {

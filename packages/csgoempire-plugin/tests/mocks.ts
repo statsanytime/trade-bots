@@ -21,7 +21,7 @@ export const newItemEvent = {
     stickers: [],
     wear: 0.086,
     published_at: '2023-09-21T19:12:52.418417Z',
-    id: 1,
+    id: 11,
     depositor_stats: {
         delivery_rate_recent: 1,
         delivery_rate_long: 0.9259259259259259,
@@ -43,7 +43,7 @@ export const newItemEvent = {
 };
 
 export const auctionUpdateEvent = {
-    id: 1,
+    id: 11,
     above_recommended_price: 0,
     auction_highest_bid: 11000,
     auction_highest_bidder: 1,
@@ -62,9 +62,9 @@ export const depositTradeStatusEvent: CSGOEmpireTradeStatusEvent = {
         },
         status: 4,
         status_message: 'Confirming',
-        tradeoffer_id: 1,
+        tradeoffer_id: 11,
         id: 1,
-        item_id: 1,
+        item_id: 11,
     },
 };
 
@@ -77,9 +77,9 @@ export const withdrawTradeStatusEvent: CSGOEmpireTradeStatusEvent = {
         },
         status: CSGOEmpireTradeStatus.Confirming,
         status_message: 'Confirming',
-        tradeoffer_id: 1,
+        tradeoffer_id: 11,
         id: 1,
-        item_id: 1,
+        item_id: 11,
         total_value: 51.43,
     },
 };

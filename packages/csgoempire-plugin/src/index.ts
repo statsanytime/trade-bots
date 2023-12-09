@@ -251,7 +251,7 @@ function withdrawUsingBid(): Promise<Withdrawal> {
             eventList.forEach((event) => {
                 if (
                     event.type !== 'withdrawal' ||
-                    event.data.id !== context.event.id
+                    event.data.item_id !== context.event.id
                 ) {
                     return;
                 }
