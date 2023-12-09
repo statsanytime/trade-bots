@@ -30,11 +30,11 @@ const USD_TO_COINS_RATE = 1.62792;
 export const MARKETPLACE = 'csgoempire';
 
 export function coinsToUsd(coins: number) {
-    return coins / USD_TO_COINS_RATE;
+    return new Big(coins).div(USD_TO_COINS_RATE).toNumber();
 }
 
 export function usdToCoins(usd: number) {
-    return usd * USD_TO_COINS_RATE;
+    return new Big(usd).times(USD_TO_COINS_RATE).toNumber();
 }
 
 export class CSGOEmpirePlugin implements Plugin {
@@ -282,8 +282,13 @@ function withdrawUsingBid(): Promise<Withdrawal> {
                     return;
                 }
 
+                const newHighestBidUsd = coinsToUsd(
+                    new Big(event.auction_highest_bid).div(100).toNumber(),
+                );
+
                 // If there's an auction update for a bid higher than ours, we can assume our bid was outbid
-                if (event.auction_highest_bid > context.item!.priceUsd) {
+                // We add a 0.5% margin to the price to prevent rounding errors, as the minimum bid increment is 1%
+                if (newHighestBidUsd > context.item!.priceUsd * 1.005) {
                     cancelListeners();
 
                     reject(new SilentError('Bid was outbid by another user.'));
@@ -306,10 +311,31 @@ function withdrawUsingBid(): Promise<Withdrawal> {
 
         plugin
             .account!.placeBid(context.item!.marketId as number, bidCoins)
-            .catch((err) => {
+            .catch((err: Error) => {
                 cancelListeners();
 
-                reject(err);
+                reject(new SilentError('Failed to place bid', err));
+            });
+    });
+}
+
+function withdrawNormal() {
+    const context = useContext();
+
+    const plugin = context.bot.plugins['csgoempire'] as CSGOEmpirePlugin;
+
+    return new Promise<Withdrawal>((resolve, reject) => {
+        plugin
+            .account!.makeWithdrawal(context.event.id)
+            .then(async (withdrawRes) => {
+                const withdrawal = await createWithdrawal({
+                    marketplaceId: withdrawRes.data.id.toString(),
+                });
+
+                resolve(withdrawal);
+            })
+            .catch((err: Error) => {
+                reject(new SilentError('Failed to withdraw item', err));
             });
     });
 }
@@ -317,31 +343,13 @@ function withdrawUsingBid(): Promise<Withdrawal> {
 export async function withdraw() {
     const context = useContext();
 
-    const plugin = context.bot.plugins['csgoempire'] as CSGOEmpirePlugin;
+    const withdrawal = context.item?.isAuction
+        ? await withdrawUsingBid()
+        : await withdrawNormal();
 
-    try {
-        if (context.item?.isAuction) {
-            const withdrawal = await withdrawUsingBid();
+    context.withdrawal = withdrawal;
 
-            context.withdrawal = withdrawal;
-
-            return withdrawal;
-        } else {
-            const withdrawRes = await plugin.account!.makeWithdrawal(
-                context.event.id,
-            );
-
-            const withdrawal = await createWithdrawal({
-                marketplaceId: withdrawRes.data.id.toString(),
-            });
-
-            context.withdrawal = withdrawal;
-
-            return withdrawal;
-        }
-    } catch (err) {
-        throw new SilentError('Failed to withdraw item', err);
-    }
+    return withdrawal;
 }
 
 export function createCSGOEmpirePlugin(options: CSGOEmpirePluginOptions) {

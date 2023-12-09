@@ -11,10 +11,20 @@ export function mockCSGOEmpire() {
     ).mockImplementation(function (key) {
         sockets[key] = {
             on: vi.fn((event, cb) => {
-                listeners[`${key}:${event}`] = cb;
+                if (!listeners[`${key}:${event}`]) {
+                    listeners[`${key}:${event}`] = [];
+                }
+
+                listeners[`${key}:${event}`].push(cb);
             }),
             off: vi.fn((event, cb) => {
-                delete listeners[`${key}:${event}`];
+                if (!listeners[`${key}:${event}`]) {
+                    return;
+                }
+
+                listeners[`${key}:${event}`] = listeners[
+                    `${key}:${event}`
+                ].filter((listener: Function) => listener !== cb);
             }),
         };
 
@@ -27,8 +37,17 @@ export function mockCSGOEmpire() {
 
     const placeBidSpy = vi.spyOn(CSGOEmpire.prototype, 'placeBid');
 
+    function callListener(key: string, ...args: any[]) {
+        if (!listeners[key]) {
+            return;
+        }
+
+        listeners[key].forEach((listener: Function) => listener(...args));
+    }
+
     return {
         listeners,
+        callListener,
         sockets,
         makeWithdrawalSpy,
         placeBidSpy,

@@ -86,7 +86,7 @@ describe('CSGOEmpire Plugin', () => {
             expect.any(Function),
         );
 
-        await CSGOEmpireMock.listeners['trading:new_item'](newItemEvent);
+        await CSGOEmpireMock.callListener('trading:new_item', newItemEvent);
 
         expect(listenFn).toHaveBeenCalledWith(
             expect.objectContaining({
@@ -97,7 +97,7 @@ describe('CSGOEmpire Plugin', () => {
 
         listenFn.mockClear();
 
-        await CSGOEmpireMock.listeners['trading:new_item']([newItemEvent]);
+        await CSGOEmpireMock.callListener('trading:new_item', [newItemEvent]);
 
         expect(listenFn).toHaveBeenCalledWith(
             expect.objectContaining({
@@ -134,7 +134,7 @@ describe('CSGOEmpire Plugin', () => {
             expect.any(Function),
         );
 
-        await CSGOEmpireMock.listeners['trading:new_item'](newItemEvent);
+        await CSGOEmpireMock.callListener('trading:new_item', newItemEvent);
 
         await flushPromises();
 
@@ -195,7 +195,7 @@ describe('CSGOEmpire Plugin', () => {
             expect.any(Function),
         );
 
-        await CSGOEmpireMock.listeners['trading:new_item'](newItemEvent);
+        await CSGOEmpireMock.callListener('trading:new_item', newItemEvent);
 
         expect(CSGOEmpireMock.makeWithdrawalSpy).toHaveBeenCalledWith(
             newItemEvent.id,
@@ -232,7 +232,7 @@ describe('CSGOEmpire Plugin', () => {
 
         await flushPromises();
 
-        await CSGOEmpireMock.listeners['trading:new_item'](newItemEvent);
+        await CSGOEmpireMock.callListener('trading:new_item', newItemEvent);
 
         expect(CSGOEmpireMock.makeWithdrawalSpy).toHaveBeenCalledWith(
             newItemEvent.id,
@@ -263,7 +263,7 @@ describe('CSGOEmpire Plugin', () => {
 
         await flushPromises();
 
-        await CSGOEmpireMock.listeners['trading:new_item']({
+        await CSGOEmpireMock.callListener('trading:new_item', {
             ...newItemEvent,
             auction_ends_at: Date.now() + 1000 * 60 * 5,
         });
@@ -294,7 +294,7 @@ describe('CSGOEmpire Plugin', () => {
 
         await flushPromises();
 
-        await CSGOEmpireMock.listeners['trading:new_item'](newItemEvent);
+        await CSGOEmpireMock.callListener('trading:new_item', newItemEvent);
 
         expect(listenMock).toHaveBeenCalledWith(
             expect.objectContaining({
@@ -348,7 +348,7 @@ describe('CSGOEmpire Plugin', () => {
 
         await flushPromises();
 
-        await CSGOEmpireMock.listeners['trading:new_item'](newItemEvent);
+        await CSGOEmpireMock.callListener('trading:new_item', newItemEvent);
 
         expect(CSGOEmpireMock.makeWithdrawalSpy).toHaveBeenCalledWith(
             newItemEvent.id,
@@ -367,7 +367,8 @@ describe('CSGOEmpire Plugin', () => {
             () => 'trading:trade_status' in CSGOEmpireMock.listeners,
         );
 
-        await CSGOEmpireMock.listeners['trading:trade_status'](
+        await CSGOEmpireMock.callListener(
+            'trading:trade_status',
             depositTradeStatusEvent,
         );
 
@@ -432,14 +433,15 @@ describe('CSGOEmpire Plugin', () => {
             expect.any(Function),
         );
 
-        await CSGOEmpireMock.listeners['trading:new_item'](newItemEvent);
+        await CSGOEmpireMock.callListener('trading:new_item', newItemEvent);
 
         await flushPromises();
 
         expect(CSGOEmpireMock.placeBidSpy).not.toHaveBeenCalled();
         expect(await testStorage.getItem('withdrawals')).toEqual(null);
 
-        await CSGOEmpireMock.listeners['trading:auction_update'](
+        await CSGOEmpireMock.callListener(
+            'trading:auction_update',
             auctionUpdateEvent,
         );
 
@@ -456,7 +458,8 @@ describe('CSGOEmpire Plugin', () => {
             () => 'trading:trade_status' in CSGOEmpireMock.listeners,
         );
 
-        await CSGOEmpireMock.listeners['trading:trade_status'](
+        await CSGOEmpireMock.callListener(
+            'trading:trade_status',
             withdrawTradeStatusEvent,
         );
 
@@ -484,5 +487,93 @@ describe('CSGOEmpire Plugin', () => {
         ]);
 
         expect(afterWithdrawFn).toHaveBeenCalled();
+    });
+
+    it('does not dismiss bid from its own auction update', async () => {
+        mswServer.use(mswBid);
+
+        const afterWithdrawFn = vi.fn();
+
+        const bot = createBot({
+            name: 'test',
+            pipeline: createPipeline('test', function () {
+                onItemBuyable(async (item) => {
+                    if (Math.round(item.priceUsd) === 65) {
+                        await withdraw();
+
+                        afterWithdrawFn();
+                    }
+                });
+            }),
+            plugins: [
+                createCSGOEmpirePlugin({
+                    apiKey: 'testApiKey',
+                }),
+            ],
+            storage: testStorage,
+        });
+
+        startBots([bot]);
+
+        await flushPromises();
+
+        expect(CSGOEmpireMock.sockets.trading.on).toHaveBeenCalledWith(
+            'new_item',
+            expect.any(Function),
+        );
+
+        expect(CSGOEmpireMock.sockets.trading.on).toHaveBeenCalledWith(
+            'auction_update',
+            expect.any(Function),
+        );
+
+        await CSGOEmpireMock.callListener('trading:new_item', {
+            ...newItemEvent,
+            auction_ends_at: Date.now() + 1000 * 60 * 5,
+        });
+
+        await flushPromises();
+
+        expect(CSGOEmpireMock.placeBidSpy).toHaveBeenCalled();
+        expect(await testStorage.getItem('withdrawals')).toEqual(null);
+
+        await CSGOEmpireMock.callListener(
+            'trading:auction_update',
+            auctionUpdateEvent,
+        );
+
+        await flushPromises();
+
+        await vi.waitUntil(
+            () => 'trading:trade_status' in CSGOEmpireMock.listeners,
+        );
+
+        await CSGOEmpireMock.callListener(
+            'trading:trade_status',
+            withdrawTradeStatusEvent,
+        );
+
+        await flushPromises();
+
+        expect(await testStorage.getItem('withdrawals')).toEqual([
+            {
+                amountUsd: 68.25,
+                id: expect.any(String),
+                item: {
+                    marketId: 11,
+                    marketName: 'USP-S | Kill Confirmed (Minimal Wear)',
+                    priceUsd: 68.25,
+                    auction: {
+                        bidCount: 1,
+                        endsAt: expect.any(String),
+                        highestBid: 67.57,
+                        highestBidder: 1,
+                    },
+                },
+                madeAt: expect.any(String),
+                marketplace: 'csgoempire',
+                marketplaceId: '1',
+            },
+        ]);
     });
 });
