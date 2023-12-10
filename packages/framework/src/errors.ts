@@ -10,6 +10,10 @@ export class SilentError extends Error {
 
 export function handleError(error: unknown) {
     if (error instanceof SilentError) {
+        if (process.env.TRADE_BOTS_DEBUG) {
+            consola.error('A silent error occured.', error);
+        }
+
         return;
     }
 
