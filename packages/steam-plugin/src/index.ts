@@ -41,7 +41,19 @@ export class SteamPlugin implements Plugin {
     }
 
     async getSession(): Promise<LoginSession> {
-        let session = new LoginSession(EAuthTokenPlatformType.SteamClient);
+        const context = useContext();
+
+        const session = new LoginSession(EAuthTokenPlatformType.SteamClient);
+        const savedRefreshToken = await context.bot.storage.getItem(
+            'steam-refresh-token',
+        );
+
+        // If we already have a refresh token, let's use it to resume the session
+        if (savedRefreshToken) {
+            session.refreshToken = savedRefreshToken as string;
+
+            return session;
+        }
 
         let startResult = await session.startWithCredentials({
             accountName: this.options.accountName,
@@ -106,6 +118,11 @@ export class SteamPlugin implements Plugin {
         let session = await this.getSession();
 
         await this.authenticateSession(session);
+
+        await context.bot.storage.setItem(
+            'steam-refresh-token',
+            session.refreshToken,
+        );
 
         this.user.logOn({
             refreshToken: session.refreshToken,
