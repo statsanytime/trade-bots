@@ -24,6 +24,7 @@
     "license": "MIT",
     "dependencies": {
         "@statsanytime/trade-bots": "^1.0.0-alpha.16",
+        "big.js": "^6.2.1",
         "consola": "^3.2.3",
         "dayjs": "^1.11.10",
         "jsonwebtoken": "^9.0.2",
@@ -32,6 +33,7 @@
     },
     "devDependencies": {
         "@statsanytime/trade-bots-shared": "workspace:^",
+        "@types/big.js": "^6.2.1",
         "@types/jsonwebtoken": "^9.0.5",
         "@types/node": "^20.6.2",
         "msw": "^2.0.9",

@@ -4,6 +4,7 @@ import {
     CSGO500MarketListingUpdateEvent,
 } from './types';
 import { CSGO500Plugin, MARKETPLACE, buxToUsd } from '.';
+import Big from 'big.js';
 
 export function onItemBuyable(handler: (item: Item) => void | Promise<void>) {
     const context = getContext();
@@ -29,6 +30,16 @@ export function onItemBuyable(handler: (item: Item) => void | Promise<void>) {
                 marketId: event.listing.id,
                 marketName: event.listing.name,
                 priceUsd: buxToUsd(event.listing.value),
+                auction: {
+                    highestBid: event.listing.auctionHighestBidValue
+                        ? buxToUsd(event.listing.auctionHighestBidValue)
+                        : null,
+                    highestBidder: event.listing.auctionHighestBidUserId,
+                    endsAt: event.listing.auctionEndDate
+                        ? new Date(event.listing.auctionEndDate)
+                        : null,
+                    bidCount: event.listing.auctionBidsCount,
+                },
             });
 
             const newContext = {
@@ -51,10 +62,29 @@ export function onItemBuyable(handler: (item: Item) => void | Promise<void>) {
     plugin.socket.on(
         'market_listing_auction_update',
         (event: CSGO500MarketListingAuctionUpdateEvent) => {
+            // It should be safe to assume a bid has been placed here. If there is some other reason
+            // for this event to be fired, we'll have to update this logic.
+            const highestBidUsd = new Big(
+                buxToUsd(event.listing.auctionHighestBidValue!),
+            )
+                .round(2)
+                .toNumber();
+
             const item = new Item({
                 marketId: event.listing.id,
                 marketName: event.listing.name,
-                priceUsd: buxToUsd(event.listing.value),
+                priceUsd: new Big(highestBidUsd)
+                    .times(1.01)
+                    .round(2)
+                    .toNumber(),
+                auction: {
+                    highestBid: highestBidUsd,
+                    highestBidder: event.listing.auctionHighestBidUserId,
+                    endsAt: event.listing.auctionEndDate
+                        ? new Date(event.listing.auctionEndDate)
+                        : null,
+                    bidCount: event.listing.auctionBidsCount,
+                },
             });
 
             const newContext = {

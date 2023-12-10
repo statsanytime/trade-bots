@@ -153,10 +153,15 @@ describe('CSGO500 Plugin', () => {
                 amountUsd: 10.696278511404563,
                 id: expect.any(String),
                 item: {
-                    auction: null,
                     marketId: '654a9048383f113fc528188c',
                     marketName: 'M4A4 | In Living Color (Minimal Wear)',
                     priceUsd: 10.696278511404563,
+                    auction: {
+                        bidCount: 1,
+                        endsAt: '2023-11-07T19:30:25.420Z',
+                        highestBid: 10.696278511404563,
+                        highestBidder: '654a71a8572da5ffc15760e4',
+                    },
                 },
                 madeAt: expect.any(String),
                 marketplace: 'csgo500',
@@ -166,22 +171,15 @@ describe('CSGO500 Plugin', () => {
     });
 
     it('correctly listens to auction updates', async () => {
-        const withdrawSpy = vi.fn();
+        const bidSpy = vi.fn();
 
         mswServer.use(
             http.post(
-                'https://tradingapi.500.casino/api/v1/market/withdraw',
+                'https://tradingapi.500.casino/api/v1/market/auction/bid',
                 async ({ request }) => {
-                    withdrawSpy(await request.json());
+                    bidSpy(await request.json());
 
-                    return HttpResponse.json({
-                        success: true,
-                        data: {
-                            listing: {
-                                id: 'test',
-                            },
-                        },
-                    });
+                    return HttpResponse.json({});
                 },
             ),
         );
@@ -214,9 +212,9 @@ describe('CSGO500 Plugin', () => {
         await listenCallback(auctionUpdateEvent);
         await flushPromises();
 
-        expect(withdrawSpy).toHaveBeenCalledWith({
+        expect(bidSpy).toHaveBeenCalledWith({
             listingId: '654a9048383f113fc528188c',
-            listingValue: 17998,
+            bidValue: 18176,
             selectedBalance: 'bux',
         });
     });

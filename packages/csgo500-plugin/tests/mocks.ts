@@ -59,7 +59,7 @@ export const auctionUpdateEvent: CSGO500MarketListingAuctionUpdateEvent = {
         userId: '5749955b405656b64eb00955',
         auctionHighestBidUserId: '574c7ddc62728b0d5fac0a45',
         auctionHighestBidValue: 17998,
-        auctionEndDate: '2023-12-10T16:24:16.442Z',
+        auctionEndDate: new Date(Date.now() + 1000 * 60 * 5).toISOString(),
         auctionBidsCount: 1,
     },
 };

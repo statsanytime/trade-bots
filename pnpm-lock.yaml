@@ -23,6 +23,9 @@ importers:
       '@statsanytime/trade-bots':
         specifier: ^1.0.0-alpha.16
         version: link:../framework
+      big.js:
+        specifier: ^6.2.1
+        version: 6.2.1
       consola:
         specifier: ^3.2.3
         version: 3.2.3
@@ -42,6 +45,9 @@ importers:
       '@statsanytime/trade-bots-shared':
         specifier: workspace:^
         version: link:../shared
+      '@types/big.js':
+        specifier: ^6.2.1
+        version: 6.2.2
       '@types/jsonwebtoken':
         specifier: ^9.0.5
         version: 9.0.5
