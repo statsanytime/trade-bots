@@ -78,6 +78,8 @@ export class SteamPlugin implements Plugin {
             await session.submitSteamGuardCode(code);
         }
 
+        await this.authenticateSession(session);
+
         return session;
     }
 
@@ -116,8 +118,6 @@ export class SteamPlugin implements Plugin {
         const context = useContext();
 
         let session = await this.getSession();
-
-        await this.authenticateSession(session);
 
         await context.bot.storage.setItem(
             'steam-refresh-token',
