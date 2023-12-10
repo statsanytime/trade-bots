@@ -1,6 +1,6 @@
 {
     "name": "@statsanytime/trade-bots-csgofloat",
-    "version": "1.0.0-alpha.16",
+    "version": "1.0.0-alpha.20",
     "type": "module",
     "exports": {
         ".": {
