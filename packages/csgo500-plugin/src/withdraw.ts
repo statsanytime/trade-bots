@@ -78,6 +78,9 @@ async function withdrawAuction() {
         plugin
             .ofetch('https://tradingapi.500.casino/api/v1/market/auction/bid', {
                 method: 'POST',
+                headers: {
+                    'x-500-auth': plugin.authToken,
+                },
                 body: {
                     listingId: listing.id,
                     bidValue: usdToBux(context.item!.priceUsd),
@@ -101,6 +104,9 @@ async function withdrawNormal() {
             'https://tradingapi.500.casino/api/v1/market/withdraw',
             {
                 method: 'POST',
+                headers: {
+                    'x-500-auth': plugin.authToken,
+                },
                 body: {
                     listingId: listing.id,
                     listingValue: listing.value,
