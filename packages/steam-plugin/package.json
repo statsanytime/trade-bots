@@ -1,6 +1,6 @@
 {
     "name": "@statsanytime/trade-bots-steam",
-    "version": "1.0.0-alpha.16",
+    "version": "1.0.0-alpha.21",
     "type": "module",
     "exports": {
         ".": {
