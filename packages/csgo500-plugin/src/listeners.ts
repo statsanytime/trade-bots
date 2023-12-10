@@ -1,5 +1,8 @@
 import { Item, getContext, handleError } from '@statsanytime/trade-bots';
-import { CSGO500MarketListingUpdateEvent } from './types';
+import {
+    CSGO500MarketListingAuctionUpdateEvent,
+    CSGO500MarketListingUpdateEvent,
+} from './types';
 import { CSGO500Plugin, MARKETPLACE, buxToUsd } from '.';
 
 export function onItemBuyable(handler: (item: Item) => void | Promise<void>) {
@@ -17,6 +20,11 @@ export function onItemBuyable(handler: (item: Item) => void | Promise<void>) {
     plugin.socket.on(
         'market_listing_update',
         (event: CSGO500MarketListingUpdateEvent) => {
+            // Ignore non-buyable listings
+            if (event.listing.status !== 3) {
+                return;
+            }
+
             const item = new Item({
                 marketId: event.listing.id,
                 marketName: event.listing.name,
@@ -40,5 +48,31 @@ export function onItemBuyable(handler: (item: Item) => void | Promise<void>) {
         },
     );
 
-    // TODO: Also listen for market_listing_auction_update
+    plugin.socket.on(
+        'market_listing_auction_update',
+        (event: CSGO500MarketListingAuctionUpdateEvent) => {
+            const item = new Item({
+                marketId: event.listing.id,
+                marketName: event.listing.name,
+                priceUsd: buxToUsd(event.listing.value),
+            });
+
+            const newContext = {
+                ...contextData,
+                item,
+                event,
+                marketplace: MARKETPLACE,
+            };
+
+            context.call(newContext, async () => {
+                try {
+                    await handler(item);
+                } catch (err) {
+                    handleError(err);
+                }
+            });
+        },
+    );
+
+    // TODO: Maybe listen for market_listing_value_change too
 }

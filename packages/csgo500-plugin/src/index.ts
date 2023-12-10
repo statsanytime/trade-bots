@@ -39,8 +39,6 @@ export class CSGO500Plugin implements Plugin {
     }
 
     boot() {
-        const context = useContext();
-
         this.socket = io('wss://tradingapi.500.casino', {
             transports: ['websocket'],
             secure: true,

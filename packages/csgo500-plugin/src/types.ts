@@ -62,3 +62,18 @@ export interface CSGO500Listing {
 export interface CSGO500MarketListingUpdateEvent {
     listing: CSGO500Listing;
 }
+
+export interface CSGO500MarketListingAuctionUpdateEvent {
+    listing: Pick<
+        CSGO500Listing,
+        | 'id'
+        | 'userId'
+        | 'name'
+        | 'value'
+        | 'originalValue'
+        | 'auctionHighestBidUserId'
+        | 'auctionHighestBidValue'
+        | 'auctionEndDate'
+        | 'auctionBidsCount'
+    >;
+}

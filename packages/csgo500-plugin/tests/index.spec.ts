@@ -5,6 +5,7 @@ import {
     beforeAll,
     describe,
     expect,
+    it,
     test,
     vi,
 } from 'vitest';
@@ -14,7 +15,7 @@ import { createCSGO500Plugin, withdraw, onItemBuyable } from '../src/index.js';
 import { createPipeline, startBots, createBot } from '@statsanytime/trade-bots';
 import { testStorage, flushPromises } from '@statsanytime/trade-bots-shared';
 import io from 'socket.io-client-v4';
-import { marketListingUpdateEvent } from './mocks.js';
+import { auctionUpdateEvent, marketListingUpdateEvent } from './mocks.js';
 
 vi.mock('socket.io-client-v4', () => {
     const onMock = vi.fn();
@@ -78,7 +79,9 @@ describe('CSGO500 Plugin', () => {
             expect.any(Function),
         );
 
-        const [eventName, listenCallback] = onMock.mock.calls[0];
+        const [eventName, listenCallback] = onMock.mock.calls.find(
+            (args) => args[0] === 'market_listing_update',
+        );
 
         await listenCallback(marketListingUpdateEvent);
 
@@ -132,11 +135,11 @@ describe('CSGO500 Plugin', () => {
         await flushPromises();
 
         const onMock = io().on as Mock;
-        const [eventName, listenCallback] = onMock.mock.calls[0];
+        const [eventName, listenCallback] = onMock.mock.calls.find(
+            (args) => args[0] === 'market_listing_update',
+        );
 
         await listenCallback(marketListingUpdateEvent);
-
-        await flushPromises();
         await flushPromises();
 
         expect(withdrawSpy).toHaveBeenCalledWith({
@@ -160,5 +163,61 @@ describe('CSGO500 Plugin', () => {
                 marketplaceId: 'test',
             },
         ]);
+    });
+
+    it('correctly listens to auction updates', async () => {
+        const withdrawSpy = vi.fn();
+
+        mswServer.use(
+            http.post(
+                'https://tradingapi.500.casino/api/v1/market/withdraw',
+                async ({ request }) => {
+                    withdrawSpy(await request.json());
+
+                    return HttpResponse.json({
+                        success: true,
+                        data: {
+                            listing: {
+                                id: 'test',
+                            },
+                        },
+                    });
+                },
+            ),
+        );
+
+        const bot = createBot({
+            name: 'test',
+            pipeline: createPipeline('test', function () {
+                onItemBuyable(function () {
+                    withdraw();
+                });
+            }),
+            plugins: [
+                createCSGO500Plugin({
+                    apiKey: 'testApiKey',
+                    userId: 'testUserId',
+                }),
+            ],
+            storage: testStorage,
+        });
+
+        startBots([bot]);
+
+        await flushPromises();
+
+        const onMock = io().on as Mock;
+        const [eventName, listenCallback] = onMock.mock.calls.find(
+            (args) => args[0] === 'market_listing_auction_update',
+        );
+
+        await listenCallback(auctionUpdateEvent);
+        await flushPromises();
+
+        expect(withdrawSpy).toHaveBeenCalledWith({
+            listingId: '654a9048383f113fc528188c',
+            listingValue: 17998,
+            selectedBalance: 'bux',
+        });
     });
 });

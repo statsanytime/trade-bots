@@ -1,4 +1,7 @@
-import { CSGO500MarketListingUpdateEvent } from '../src/types.js';
+import {
+    CSGO500MarketListingAuctionUpdateEvent,
+    CSGO500MarketListingUpdateEvent,
+} from '../src/types.js';
 
 export const marketListingUpdateEvent: CSGO500MarketListingUpdateEvent = {
     listing: {
@@ -37,12 +40,26 @@ export const marketListingUpdateEvent: CSGO500MarketListingUpdateEvent = {
         value: 17820,
         originalValue: 18875,
         userId: '5749955b405656b64eb00955',
-        status: 6,
+        status: 3,
         auctionHighestBidUserId: '654a71a8572da5ffc15760e4',
         auctionHighestBidValue: 17820,
         auctionEndDate: '2023-11-07T19:30:25.420Z',
         auctionBidsCount: 1,
-        shortStatus: 'market_waiting_tradeoffer',
-        niceStatus: 'Waiting for tradeoffer',
+        shortStatus: 'market_listed',
+        niceStatus: 'Active Listing',
+    },
+};
+
+export const auctionUpdateEvent: CSGO500MarketListingAuctionUpdateEvent = {
+    listing: {
+        id: '654a9048383f113fc528188c',
+        name: 'M4A4 | In Living Color (Minimal Wear)',
+        value: 17998,
+        originalValue: 17820,
+        userId: '5749955b405656b64eb00955',
+        auctionHighestBidUserId: '574c7ddc62728b0d5fac0a45',
+        auctionHighestBidValue: 17998,
+        auctionEndDate: '2023-12-10T16:24:16.442Z',
+        auctionBidsCount: 1,
     },
 };
