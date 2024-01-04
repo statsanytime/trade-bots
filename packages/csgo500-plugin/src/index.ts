@@ -28,6 +28,7 @@ export class CSGO500Plugin implements Plugin {
 
     socket?: Socket;
 
+    // TODO: Add support for switching currency
     constructor(options: CSGO500PluginOptions) {
         this.apiKey = options.apiKey;
         this.userId = options.userId;

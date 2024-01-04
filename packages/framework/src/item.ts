@@ -6,6 +6,7 @@ export class Item {
     marketId: string | number;
     priceUsd: number;
     assetId?: string;
+    previousAssetId?: string;
     auction: Auction | null;
 
     constructor(options: ItemOptions) {
@@ -13,6 +14,7 @@ export class Item {
         this.marketId = options.marketId;
         this.priceUsd = options.priceUsd;
         this.assetId = options.assetId;
+        this.previousAssetId = options.previousAssetId;
         this.auction = options.auction ?? null;
     }
 

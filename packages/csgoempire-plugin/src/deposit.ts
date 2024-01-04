@@ -49,6 +49,10 @@ function depositChunk(
             ReturnType<CSGOEmpire['getInventory']>
         >['items'];
 
+        if (depositItems.length === 0) {
+            reject(new Error('No deposit items were found in inventory'));
+        }
+
         await plugin.account!.makeDeposits(depositItems);
 
         const depositObjects: Deposit[] = [];

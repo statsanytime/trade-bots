@@ -170,29 +170,37 @@ export function acceptTradeOffer() {
         );
     }
 
-    return new Promise((resolve, reject) =>
-        context.bot.hooks.hook('steam:offer-accepted', (offer: any) => {
-            const matchingItem = offer.itemsToReceive.find(
-                (item: any) =>
-                    item.market_hash_name === context.item?.marketName,
-            );
+    return new Promise((resolve, reject) => {
+        // If no offer is found after 24 hours, reject the promise
+        const timeout = setTimeout(
+            () => {
+                reject('No matching item accepted after 24 hours');
+            },
+            24 * 60 * 60 * 1000,
+        );
 
-            // If no offer is found after 24 hours, reject the promise
-            const timeout = setTimeout(
-                () => {
-                    reject('No matching item accepted after 24 hours');
-                },
-                24 * 60 * 60 * 1000,
+        context.bot.hooks.hook('steam:offer-accepted', async (offer: any) => {
+            // Get the "new" received items, a.k.a. the item with the updated assetid
+            const receivedItemsFn = util.promisify(
+                offer.getReceivedItems.bind(offer),
             );
+            const receivedItems = await receivedItemsFn();
+
+            const localateItem = (item: any) =>
+                item.market_hash_name === context.item?.marketName;
+
+            const oldMatchingItem = offer.itemsToReceive.find(localateItem);
+            const matchingItem = receivedItems.find(localateItem);
 
             if (matchingItem) {
                 context.item!.assetId = matchingItem.assetid;
+                context.item!.previousAssetId = oldMatchingItem?.assetid;
 
                 resolve(null);
                 clearTimeout(timeout);
             }
-        }),
-    );
+        });
+    });
 }
 
 export function createSteamPlugin(options: SteamPluginOptions) {

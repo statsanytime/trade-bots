@@ -20,6 +20,7 @@ export interface ItemOptions {
     marketId: string | number;
     priceUsd: number;
     assetId?: string;
+    previousAssetId?: string;
     auction?: Auction | null;
 }
 

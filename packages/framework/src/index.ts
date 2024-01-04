@@ -173,6 +173,7 @@ export async function startBots(bots: Bot[]) {
             try {
                 await bot.bootPlugins();
                 await bot.pipeline.handler();
+                await checkScheduledDeposits(bot);
             } catch (err) {
                 handleError(err);
             }
