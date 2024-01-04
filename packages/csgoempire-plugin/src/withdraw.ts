@@ -113,8 +113,12 @@ function withdrawNormal() {
     const plugin = context.bot.plugins['csgoempire'] as CSGOEmpirePlugin;
 
     return new Promise<Withdrawal>((resolve, reject) => {
+        if (!context.item) {
+            throw new Error('An item must be set in the context to withdraw.');
+        }
+
         plugin
-            .account!.makeWithdrawal(context.event.id)
+            .account!.makeWithdrawal(context.event.id, usdToCoins(context.item.priceUsd))
             .then(async (withdrawRes) => {
                 const withdrawal = await createWithdrawal({
                     marketplaceId: withdrawRes.data.id.toString(),

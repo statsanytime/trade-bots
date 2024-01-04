@@ -76,8 +76,8 @@ importers:
         specifier: ^3.2.3
         version: 3.2.3
       csgoempire-wrapper:
-        specifier: ^0.1.19
-        version: 0.1.19
+        specifier: ^0.1.20
+        version: 0.1.20
       dayjs:
         specifier: ^1.11.10
         version: 1.11.10
@@ -3167,8 +3167,8 @@ packages:
       shebang-command: 2.0.0
       which: 2.0.2
 
-  /csgoempire-wrapper@0.1.19:
-    resolution: {integrity: sha512-0A3HDAmfki+TWP83ypna5qAOKMv61Egv0l1B8bfCeZctHJF++YiUd1SPfVwqDQU7QytFYPAIAQaQPdeQgyY5OA==}
+  /csgoempire-wrapper@0.1.20:
+    resolution: {integrity: sha512-gPvDQ/LukB1HoJrSxjaz1DJOCpvXX2WXaO2Q7xpvPl03Og4a1l0m9N6Zz9K+6OaRJF/2Fzm9qVzCxKeR8rxNpA==}
     dependencies:
       axios: 0.25.0
       dotenv: 16.3.1
