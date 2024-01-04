@@ -140,6 +140,7 @@ describe('CSGOEmpire Plugin', () => {
 
         expect(CSGOEmpireMock.makeWithdrawalSpy).toHaveBeenCalledWith(
             newItemEvent.id,
+            106.12,
         );
 
         expect(await testStorage.getItem('withdrawals')).toEqual([
@@ -199,6 +200,7 @@ describe('CSGOEmpire Plugin', () => {
 
         expect(CSGOEmpireMock.makeWithdrawalSpy).toHaveBeenCalledWith(
             newItemEvent.id,
+            106.12,
         );
 
         expect(afterWithdrawFn).not.toHaveBeenCalled();
@@ -236,6 +238,7 @@ describe('CSGOEmpire Plugin', () => {
 
         expect(CSGOEmpireMock.makeWithdrawalSpy).toHaveBeenCalledWith(
             newItemEvent.id,
+            106.12,
         );
     });
 
@@ -352,6 +355,7 @@ describe('CSGOEmpire Plugin', () => {
 
         expect(CSGOEmpireMock.makeWithdrawalSpy).toHaveBeenCalledWith(
             newItemEvent.id,
+            106.12,
         );
 
         await vi.waitUntil(
