@@ -118,7 +118,10 @@ function withdrawNormal() {
         }
 
         plugin
-            .account!.makeWithdrawal(context.event.id, usdToCoins(context.item.priceUsd))
+            .account!.makeWithdrawal(
+                context.event.id,
+                usdToCoins(context.item.priceUsd),
+            )
             .then(async (withdrawRes) => {
                 const withdrawal = await createWithdrawal({
                     marketplaceId: withdrawRes.data.id.toString(),
