@@ -21,7 +21,7 @@ importers:
   packages/csgo500-plugin:
     dependencies:
       '@statsanytime/trade-bots':
-        specifier: ^1.0.0-alpha.24
+        specifier: ^1.0.0-alpha.26
         version: link:../framework
       big.js:
         specifier: ^6.2.1
@@ -67,7 +67,7 @@ importers:
   packages/csgoempire-plugin:
     dependencies:
       '@statsanytime/trade-bots':
-        specifier: ^1.0.0-alpha.24
+        specifier: ^1.0.0-alpha.26
         version: link:../framework
       big.js:
         specifier: ^6.2.1
@@ -110,7 +110,7 @@ importers:
   packages/csgofloat-plugin:
     dependencies:
       '@statsanytime/trade-bots':
-        specifier: ^1.0.0-alpha.24
+        specifier: ^1.0.0-alpha.26
         version: link:../framework
       big.js:
         specifier: ^6.2.1
@@ -193,7 +193,7 @@ importers:
   packages/pricempire-plugin:
     dependencies:
       '@statsanytime/trade-bots':
-        specifier: ^1.0.0-alpha.24
+        specifier: ^1.0.0-alpha.26
         version: link:../framework
       big.js:
         specifier: ^6.2.1
@@ -252,7 +252,7 @@ importers:
   packages/steam-plugin:
     dependencies:
       '@statsanytime/trade-bots':
-        specifier: ^1.0.0-alpha.24
+        specifier: ^1.0.0-alpha.26
         version: link:../framework
       consola:
         specifier: ^3.2.3
