@@ -28,6 +28,26 @@ export class Withdrawal extends Trade {
     constructor(options: CreateTradeOptions) {
         super(options);
     }
+
+    async save() {
+        const context = useContext();
+        const withdrawals = await getWithdrawals();
+
+        const savedIndex = withdrawals.findIndex(
+            (withdrawal) => withdrawal.id === this.id,
+        );
+
+        // If we found a withdrawal with the same id, let's replace it
+        if (savedIndex !== -1) {
+            withdrawals[savedIndex] = this;
+        } else {
+            withdrawals.push(this);
+        }
+
+        await context.bot.storage.setItem('withdrawals', withdrawals);
+
+        return this;
+    }
 }
 
 export class Deposit extends Trade {

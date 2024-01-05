@@ -1,6 +1,7 @@
 export interface CSGO500PluginOptions {
     apiKey: string;
     userId: string;
+    currency?: string;
 }
 
 export interface CSGO500Item {

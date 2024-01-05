@@ -84,7 +84,7 @@ async function withdrawAuction() {
                 body: {
                     listingId: listing.id,
                     bidValue: usdToBux(context.item!.priceUsd),
-                    selectedBalance: 'bux',
+                    selectedBalance: plugin.currency,
                 },
             })
             .catch((err) => {
@@ -110,7 +110,7 @@ async function withdrawNormal() {
                 body: {
                     listingId: listing.id,
                     listingValue: listing.value,
-                    selectedBalance: 'bux',
+                    selectedBalance: plugin.currency,
                 },
             },
         );

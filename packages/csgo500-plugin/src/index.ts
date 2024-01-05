@@ -17,6 +17,26 @@ export function usdToBux(usd: number) {
 
 export const MARKETPLACE = 'csgo500';
 
+export enum CSGO500Currency {
+    BUX = 'bux',
+    BCH = 'bch',
+    BTC = 'btc',
+    DOGE = 'doge',
+    EOS = 'eos',
+    ETH = 'eth',
+    LTC = 'ltc',
+    SOL = 'sol',
+    XLM = 'xlm',
+    XRP = 'xrp',
+    USDT = 'usdt',
+    USDC = 'usdc',
+    BNB = 'bnb',
+    TRX = 'trx',
+    AVAX = 'avax',
+    MATIC = 'matic',
+    ADA = 'ada',
+}
+
 export class CSGO500Plugin implements Plugin {
     name = 'csgo500';
 
@@ -24,14 +44,16 @@ export class CSGO500Plugin implements Plugin {
 
     userId: string;
 
+    currency: string;
+
     ofetch: ReturnType<typeof createFetch>;
 
     socket?: Socket;
 
-    // TODO: Add support for switching currency
     constructor(options: CSGO500PluginOptions) {
         this.apiKey = options.apiKey;
         this.userId = options.userId;
+        this.currency = options.currency || CSGO500Currency.BUX;
         this.ofetch = createFetch();
     }
 

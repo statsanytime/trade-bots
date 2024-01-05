@@ -97,6 +97,7 @@ describe('Steam Plugin', () => {
                     item: context.item!,
                     amountUsd: context.item!.priceUsd,
                 });
+                await context.withdrawal.save();
 
                 await acceptTradeOffer();
 
@@ -156,5 +157,23 @@ describe('Steam Plugin', () => {
                 priceUsd: 150.12,
             }),
         });
+
+        expect(await testStorage.getItem('withdrawals')).toEqual([
+            {
+                id: expect.any(String),
+                marketplace: 'some-marketplace',
+                marketplaceId: 'some-marketplace-id',
+                item: {
+                    assetId: '12345',
+                    previousAssetId: '1234',
+                    marketId: 'some-market-id',
+                    marketName: 'Market Name',
+                    priceUsd: 150.12,
+                    auction: null,
+                },
+                amountUsd: 150.12,
+                madeAt: expect.any(String),
+            },
+        ]);
     });
 });

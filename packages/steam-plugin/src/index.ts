@@ -1,4 +1,4 @@
-import { Plugin, useContext } from '@statsanytime/trade-bots';
+import { Plugin, getContext, useContext } from '@statsanytime/trade-bots';
 // @ts-ignore
 import SteamUser from 'steam-user';
 // @ts-ignore
@@ -162,11 +162,18 @@ export class SteamPlugin implements Plugin {
 }
 
 export function acceptTradeOffer() {
+    const contextObj = getContext();
     const context = useContext();
 
     if (!context.item) {
         throw new Error(
             'No item is defined in the context. Make sure an item has been listened for and withdrawn.',
+        );
+    }
+
+    if (!context.withdrawal) {
+        throw new Error(
+            'No withdrawal is defined in the context. Make sure a withdrawal has been listened for and withdrawn.',
         );
     }
 
@@ -178,8 +185,8 @@ export function acceptTradeOffer() {
             },
             24 * 60 * 60 * 1000,
         );
-
-        context.bot.hooks.hook('steam:offer-accepted', async (offer: any) => {
+    
+        async function handleAcceptedOffer(offer: any) {
             // Get the "new" received items, a.k.a. the item with the updated assetid
             const receivedItemsFn = util.promisify(
                 offer.getReceivedItems.bind(offer),
@@ -193,12 +200,21 @@ export function acceptTradeOffer() {
             const matchingItem = receivedItems.find(localateItem);
 
             if (matchingItem) {
+                // TODO: We should probably not have to update both places here
                 context.item!.assetId = matchingItem.assetid;
                 context.item!.previousAssetId = oldMatchingItem?.assetid;
+                context.withdrawal!.item.assetId = matchingItem.assetid;
+                context.withdrawal!.item.previousAssetId = oldMatchingItem?.assetid;
+                await context.withdrawal!.save();
 
                 resolve(null);
                 clearTimeout(timeout);
             }
+        }
+
+        context.bot.hooks.hook('steam:offer-accepted', (offer: any) => {
+            // Resume context
+            contextObj.call(context, () => handleAcceptedOffer(offer));
         });
     });
 }
