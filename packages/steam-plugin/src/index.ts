@@ -185,7 +185,7 @@ export function acceptTradeOffer() {
             },
             24 * 60 * 60 * 1000,
         );
-    
+
         async function handleAcceptedOffer(offer: any) {
             // Get the "new" received items, a.k.a. the item with the updated assetid
             const receivedItemsFn = util.promisify(
@@ -204,7 +204,8 @@ export function acceptTradeOffer() {
                 context.item!.assetId = matchingItem.assetid;
                 context.item!.previousAssetId = oldMatchingItem?.assetid;
                 context.withdrawal!.item.assetId = matchingItem.assetid;
-                context.withdrawal!.item.previousAssetId = oldMatchingItem?.assetid;
+                context.withdrawal!.item.previousAssetId =
+                    oldMatchingItem?.assetid;
                 await context.withdrawal!.save();
 
                 resolve(null);
