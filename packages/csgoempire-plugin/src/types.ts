@@ -139,7 +139,20 @@ export type CSGOEmpireErroredStatus = {
     };
 };
 
-export type CSGOEmpireDepositStatus = {
+export type CSGOEmpireDepositProcessingStatus = {
+    type: 'deposit';
+    data: {
+        item: CSGOEmpireItem;
+        status: CSGOEmpireTradeStatus.Processing;
+        id: number;
+        item_id: number;
+        created_at: string;
+        total_value: number;
+        suggested_price: number;
+    };
+};
+
+export type CSGOEmpireDepositConfirmingStatus = {
     type: 'deposit';
     data: {
         item: CSGOEmpireItem;
@@ -216,7 +229,8 @@ export type CSGOEmpireTradeStatusEvent =
     | CSGOEmpireWithdrawalSendingStatus
     | CSGOEmpireWithdrawalSentStatus
     | CSGOEmpireWithdrawalCompletedStatus
-    | CSGOEmpireDepositStatus
+    | CSGOEmpireDepositProcessingStatus
+    | CSGOEmpireDepositConfirmingStatus
     | CSGOEmpireDepositSendingStatus
     | CSGOEmpireDepositSentStatus
     | CSGOEmpireDepositCompletedStatus

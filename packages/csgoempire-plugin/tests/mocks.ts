@@ -60,11 +60,12 @@ export const depositTradeStatusEvent: CSGOEmpireTradeStatusEvent = {
             market_value: 51.43,
             asset_id: 123,
         },
-        status: 4,
-        status_message: 'Confirming',
-        tradeoffer_id: 11,
+        status: 2,
         id: 1,
         item_id: 11,
+        total_value: 51.43,
+        suggested_price: 51.43,
+        created_at: '2023-10-20 14:48:30',
     },
 };
 

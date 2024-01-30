@@ -36,6 +36,7 @@ import {
     auctionUpdateEvent,
     withdrawTradeStatusEvent,
 } from './mocks.js';
+import consola from 'consola';
 
 const mswServer = setupServer();
 
@@ -397,6 +398,84 @@ describe('CSGOEmpire Plugin', () => {
         );
 
         expect(await testStorage.getItem('scheduled-deposits')).toEqual([]);
+    });
+
+    it('handles timed out deposit correctly', async () => {
+        vi.useFakeTimers();
+
+        const depositMock = vi.fn();
+        const consolaMock = vi.spyOn(consola, 'error').mockImplementation(() => {});
+
+        mswServer.use(
+            http.post(
+                'https://csgoempire.com/api/v2/trading/deposit',
+                async ({ request }) => {
+                    depositMock(await request.json());
+
+                    return HttpResponse.json({
+                        success: true,
+                    });
+                },
+            ),
+            mswUserInventory,
+            mswWithdraw,
+        );
+
+        const bot = createBot({
+            name: 'test',
+            pipeline: createPipeline('test', () => {
+                onItemBuyable(async () => {
+                    await withdraw();
+
+                    // Pretend steam accepted the offer and set the asset id
+                    const context = useContext();
+                    context.item!.assetId = '123';
+
+                    await scheduleDeposit({
+                        amountUsd: 68.45,
+                    });
+                });
+            }),
+            plugins: [
+                createCSGOEmpirePlugin({
+                    apiKey: 'test',
+                }),
+            ],
+            storage: testStorage,
+        });
+
+        startBots([bot]);
+
+        await vi.runOnlyPendingTimersAsync();
+
+        await CSGOEmpireMock.callListener('trading:new_item', newItemEvent);
+
+        expect(CSGOEmpireMock.makeWithdrawalSpy).toHaveBeenCalledWith(
+            newItemEvent.id,
+            106.12,
+        );
+
+        await vi.waitUntil(
+            async () => await testStorage.hasItem('scheduled-deposits'),
+        );
+
+        expect(await testStorage.getItem('scheduled-deposits')).toHaveLength(1);
+
+        // Go forward 8 days when the item is tradable
+        vi.setSystemTime(new Date(Date.now() + 8 * 24 * 60 * 60 * 1000));
+
+        await checkScheduledDeposits(bot);
+
+        // Go forward 60 seconds
+        await vi.advanceTimersByTimeAsync(60 * 1000);
+
+        expect(consolaMock).toHaveBeenCalledWith(
+            'Failed to deposit item',
+            expect.any(Object),
+        );
+
+        // Ensure the deposit is still scheduled and can be retried
+        expect(await testStorage.getItem('scheduled-deposits')).toHaveLength(1);
     });
 
     test('auction update works', async () => {

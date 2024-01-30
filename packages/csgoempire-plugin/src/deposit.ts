@@ -9,13 +9,25 @@ import Big from 'big.js';
 import consola from 'consola';
 import { CSGOEmpire } from 'csgoempire-wrapper';
 import {
-    CSGOEmpireDepositStatus,
+    CSGOEmpireDepositProcessingStatus,
     CSGOEmpireScheduleDepositOptions,
     CSGOEmpireTradeStatus,
     CSGOEmpireTradeStatusEvent,
 } from './types.js';
 import chunk from 'lodash/chunk.js';
 import { CSGOEmpirePlugin, MARKETPLACE, usdToCoins } from './index.js';
+
+class DepositError extends Error {
+    items: ScheduledDeposit[];
+    errors: Error[];
+
+    constructor(message: string, items: ScheduledDeposit[], errors: Error[]) {
+        super(message);
+        this.name = 'DepositError';
+        this.items = items;
+        this.errors = errors;
+    }
+}
 
 function depositChunk(
     marketplaceInventory: Awaited<ReturnType<CSGOEmpire['getInventory']>>,
@@ -65,13 +77,13 @@ function depositChunk(
                     return;
                 }
 
-                if (event.data.status === CSGOEmpireTradeStatus.Confirming) {
+                if (event.data.status === CSGOEmpireTradeStatus.Processing) {
                     // Find the deposit object that matches the event
                     const deposit = deposits.find((deposit) => {
                         return (
                             deposit.assetId ===
                             (
-                                event as CSGOEmpireDepositStatus
+                                event as CSGOEmpireDepositProcessingStatus
                             ).data.item.asset_id?.toString()
                         );
                     });
@@ -123,13 +135,18 @@ export async function depositMultiple(deposits: ScheduledDeposit[]) {
 
     const marketplaceInventory = await plugin.account!.getInventory(false);
 
+    const errors: Error[] = [];
+
     for (const chunk of depositChunks) {
         try {
             await depositChunk(marketplaceInventory, chunk);
         } catch (err) {
-            console.error(err);
-            consola.error('Failed to deposit item chunk', chunk);
+            errors.push(err as Error);
         }
+    }
+
+    if (errors.length) {
+        throw new DepositError(`${errors.length} errors occurred while depositing items.`, deposits, errors);
     }
 }
 
